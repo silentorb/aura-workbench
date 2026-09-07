@@ -1,0 +1,29 @@
+x-mnt-volumes: &mnt-volumes
+  - ..:/workspaces/aura-workbench
+  # Sibling repos under the workbench .mnt/ tree (same pattern as the old Aura workspace).
+  - ${AURA_ENGINE_PATH:-../../aura-engine}:/workspaces/aura-workbench/.mnt/aura-engine
+  - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-workbench/.mnt/aura-editor
+  - ${IMP_RUST_PATH:-../../imp-rust}:/workspaces/aura-workbench/.mnt/imp-rust
+  - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
+  - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts:ro
+  # Cargo path deps in aura-engine resolve `.mnt/imp-*` relative to the engine root.
+  - ${IMP_RUST_PATH:-../../imp-rust}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rust
+  - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
+  - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-ts:ro
+
+services:
+  engine:
+    build:
+      context: ..
+      dockerfile: docker/engine/Dockerfile
+    volumes: *mnt-volumes
+    working_dir: /workspaces/aura-workbench/.mnt/aura-engine
+    command: sleep infinity
+
+  editor:
+    build:
+      context: ..
+      dockerfile: docker/editor/Dockerfile
+    volumes: *mnt-volumes
+    working_dir: /workspaces/aura-workbench/.mnt/aura-editor
+    command: sleep infinity

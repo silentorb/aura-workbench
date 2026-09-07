@@ -1,0 +1,23 @@
+{
+  "name": "Aura Workbench",
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "engine",
+  "runServices": ["engine", "editor"],
+  "workspaceFolder": "/workspaces/aura-workbench",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "vadimcn.vscode-lldb"
+      ],
+      "settings": {
+        "rust-analyzer.check.command": "clippy",
+        "rust-analyzer.linkedProjects": [
+          "/workspaces/aura-workbench/.mnt/aura-engine/Cargo.toml"
+        ]
+      }
+    }
+  }
+}
