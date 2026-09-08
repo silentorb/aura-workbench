@@ -1,3 +1,6 @@
+# Match Dev Containers' project name so host `docker compose` and the IDE share one stack.
+name: aura-workbench_devcontainer
+
 x-mnt-volumes: &mnt-volumes
   - ..:/workspaces/aura-workbench
   # Sibling repos under the workbench .mnt/ tree (same pattern as the old Aura workspace).
@@ -13,6 +16,7 @@ x-mnt-volumes: &mnt-volumes
 
 services:
   engine:
+    image: aura-workbench-engine:local
     build:
       context: ..
       dockerfile: docker/engine/Dockerfile
@@ -21,9 +25,18 @@ services:
     command: sleep infinity
 
   editor:
+    image: aura-workbench-editor:local
     build:
       context: ..
       dockerfile: docker/editor/Dockerfile
+      # Bake builds engine before editor (depends_on only orders startup, not builds).
+      # Required when Dev Containers runs `docker compose build engine editor` in parallel.
+      additional_contexts:
+        "aura-workbench-engine:local": "service:engine"
+      args:
+        BASE_IMAGE: aura-workbench-engine:local
     volumes: *mnt-volumes
     working_dir: /workspaces/aura-workbench/.mnt/aura-editor
     command: sleep infinity
+    depends_on:
+      - engine

@@ -2,8 +2,8 @@
 
 Primary development workspace for Aura. Opens as a Dev Container that starts two Compose services:
 
-- **engine** — Rust toolchain; mounts siblings under `.mnt/`
-- **editor** — Node toolchain; same `.mnt/` layout
+- **engine** — Rust toolchain + ALSA; Cursor attaches here; home for the **engine test suite**
+- **editor** — derives from the engine image, adds Linux GUI deps for **Iced**; editor build/test/run only (not engine tests)
 
 ## Host layout
 
@@ -35,7 +35,7 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
 2. Open this folder in Cursor.
 3. Reopen in Container.
 
-In the engine service:
+### Engine (default attach)
 
 ```bash
 cd /workspaces/aura-workbench/.mnt/aura-engine
@@ -43,6 +43,21 @@ cargo build
 cargo test
 cargo clippy
 ./demos/render-all.sh
+```
+
+### Editor (editor service)
+
+```bash
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
+```
+
+### Rebuild images
+
+Editor `FROM`s `aura-workbench-engine:local`. Compose declares that build dependency,
+so one command is enough:
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml build
 ```
 
 ## Paths
@@ -55,7 +70,9 @@ Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling re
 |------|------|
 | `aura-workbench` | Orchestration (Compose, Dev Container) |
 | `aura-engine` | Procedural music engine (Rust) |
-| `aura-editor` | Editor UI (placeholder) |
+| `aura-editor` | Editor UI (Rust / Iced) |
+
+End users target Windows; daily development is WSL Linux containers. A dedicated Windows cross-compile container is planned later.
 
 ## License
 
