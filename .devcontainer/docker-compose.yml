@@ -6,11 +6,11 @@ x-mnt-volumes: &mnt-volumes
   # Sibling repos under the workbench .mnt/ tree (same pattern as the old Aura workspace).
   - ${AURA_ENGINE_PATH:-../../aura-engine}:/workspaces/aura-workbench/.mnt/aura-engine
   - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-workbench/.mnt/aura-editor
-  - ${IMP_RUST_PATH:-../../imp-rust}:/workspaces/aura-workbench/.mnt/imp-rust
+  - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
   - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts:ro
   # Cargo path deps in aura-engine resolve `.mnt/imp-*` relative to the engine root.
-  - ${IMP_RUST_PATH:-../../imp-rust}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rust
+  - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
   - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-ts:ro
 

@@ -12,7 +12,7 @@ Primary development workspace for Aura. Opens as a Dev Container that starts two
   aura-workbench/   # this repo — open in Cursor
   aura-engine/
   aura-editor/
-  imp-rust/
+  imp-rs/
   imp-spec/
   imp-ts/
 ```
@@ -24,7 +24,7 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
   .mnt/
     aura-engine/
     aura-editor/
-    imp-rust/
+    imp-rs/
     imp-spec/
     imp-ts/
 ```
