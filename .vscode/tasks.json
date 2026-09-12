@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build editor (Windows)",
+      "type": "shell",
+      "command": "bash \"${workspaceFolder}/scripts/run-editor-windows-build.sh\"",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+        }
+      },
+      "group": "build",
+      "problemMatcher": ["$rustc"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false,
+        "echo": true,
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "detail": "Cross-compile aura-editor.exe via editor-windows image; output goes to AURA_EDITOR_WIN_OUT (/out). Requires Dev Container rebuild for docker-outside-of-docker."
+    }
+  ]
+}

@@ -8,12 +8,11 @@
 
 | Service | Role |
 |---------|------|
-| `engine` | Cursor attach target. Engine build, clippy, and **engine test suite**. Lean Rust + ALSA image. |
+| `engine` | Cursor attach target. Engine build, clippy, and **engine test suite**. Lean Rust + ALSA image. Includes docker-outside-of-docker for host Docker CLI access. |
 | `editor` | Editor build, test, and run only (Rust + Iced GUI system deps). Derived from the engine image. **Not** for running engine tests. |
+| `editor-windows` | On-demand Windows MSVC cross-compile for the editor (`cargo-xwin`). Derived from the engine image. **Not** in `runServices`. |
 
 If the engine image later accumulates substantial deps the editor does not need, extract a shared base image instead of deriving editor from engine.
-
-A dedicated **Windows cross-compile** container for shipping the editor to Windows users is planned later; it is not present yet.
 
 ## Mounted repositories
 
@@ -66,13 +65,33 @@ From the attached engine context:
 docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
 ```
 
+## Commands (editor Windows cross-compile)
+
+On-demand `editor-windows` image (not started with the Dev Container). Output `.exe` is written to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`).
+
+The engine Dev Container includes **docker-outside-of-docker** so the Docker CLI can talk to the host daemon. After changing `devcontainer.json` features, rebuild/reopen the container.
+
+From the attached engine context (or the VS Code / Cursor task **Build editor (Windows)**):
+
+```bash
+bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh
+```
+
+That wrapper builds `editor-windows` and runs the cross-compile with host bind mounts (nested `docker compose run` would pass container paths the host daemon cannot mount).
+
 ## Image rebuild
 
-Editor derives from `aura-workbench-engine:local`. Compose wires that with
-`additional_contexts`, so a single build is safe (and what Dev Containers runs):
+Editor and editor-windows derive from `aura-workbench-engine:local`. Compose wires that with
+`additional_contexts`, so a single build is safe (and what Dev Containers runs for engine+editor):
 
 ```bash
 docker compose -f .devcontainer/docker-compose.yml build
+```
+
+To build the Windows image only (pulls in engine via `additional_contexts`):
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml build editor-windows
 ```
 
 ## Commits

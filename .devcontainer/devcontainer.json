@@ -5,6 +5,15 @@
   "runServices": ["engine", "editor"],
   "workspaceFolder": "/workspaces/aura-workbench",
   "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    }
+  },
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  },
   "customizations": {
     "vscode": {
       "extensions": [

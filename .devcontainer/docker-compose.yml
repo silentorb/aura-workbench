@@ -40,3 +40,30 @@ services:
     command: sleep infinity
     depends_on:
       - engine
+
+  # On-demand Windows MSVC cross-compile (not in devcontainer runServices).
+  editor-windows:
+    image: aura-workbench-editor-windows:local
+    build:
+      context: ..
+      dockerfile: docker/editor-windows/Dockerfile
+      additional_contexts:
+        "aura-workbench-engine:local": "service:engine"
+      args:
+        BASE_IMAGE: aura-workbench-engine:local
+    # Keep in sync with x-mnt-volumes, plus the Windows output mount.
+    volumes:
+      - ..:/workspaces/aura-workbench
+      - ${AURA_ENGINE_PATH:-../../aura-engine}:/workspaces/aura-workbench/.mnt/aura-engine
+      - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-workbench/.mnt/aura-editor
+      - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
+      - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
+      - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts:ro
+      - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
+      - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
+      - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-ts:ro
+      - ${AURA_EDITOR_WIN_OUT:-../.win-out}:/out
+    working_dir: /workspaces/aura-workbench/.mnt/aura-editor
+    command: sleep infinity
+    depends_on:
+      - engine
