@@ -1,0 +1,8 @@
+# Source from other scripts: source "$(dirname "$0")/mnt-paths.sh"
+WORKBENCH_ROOT="${WORKBENCH_ROOT:-/workspaces/aura-workbench}"
+MNT="${MNT:-${WORKBENCH_ROOT}/.mnt}"
+AURA_ENGINE="${AURA_ENGINE:-${MNT}/aura-engine}"
+AURA_EDITOR="${AURA_EDITOR:-${MNT}/aura-editor}"
+IMP_RS="${IMP_RS:-${MNT}/imp-rs}"
+IMP_SPEC="${IMP_SPEC:-${MNT}/imp-spec}"
+IMP_TS="${IMP_TS:-${MNT}/imp-ts}"

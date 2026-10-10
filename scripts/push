@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Push writable workspace sibling repos to their remotes in dependency order
+# (dependencies before dependents). Skips read-only mounts (imp-ts).
+#
+# Usage (from workbench root, host or container):
+#   ./scripts/push
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/push
+
+Push current branches of writable workspace repos to origin, in dependency
+order: imp-spec → imp-rs → aura-engine → aura-editor → aura-workbench.
+
+Skips imp-ts (mounted read-only in Compose).
+EOF
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $arg" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKBENCH_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# shellcheck source=mnt-paths.sh
+source "${SCRIPT_DIR}/mnt-paths.sh"
+
+# Resolve a repo directory. Prefers .mnt/<name>, then a sibling of the workbench.
+resolve_repo() {
+  local name="$1"
+  local candidates=("${MNT}/${name}" "${WORKBENCH_ROOT}/../${name}")
+  local candidate
+  for candidate in "${candidates[@]}"; do
+    if [[ -e "${candidate}/.git" ]]; then
+      (cd "$candidate" && pwd)
+      return 0
+    fi
+  done
+  return 1
+}
+
+push_repo() {
+  local label="$1"
+  local path="$2"
+
+  echo "==> ${label}"
+  if [[ ! -e "${path}/.git" ]]; then
+    echo "    skip: not a git repo (${path})"
+    return 0
+  fi
+
+  if [[ ! -w "$path" ]]; then
+    echo "    skip: not writable (${path})"
+    return 0
+  fi
+
+  local branch
+  branch="$(git -C "$path" rev-parse --abbrev-ref HEAD)"
+  if [[ "$branch" == "HEAD" ]]; then
+    echo "    skip: detached HEAD (${path})"
+    return 0
+  fi
+
+  if ! git -C "$path" remote get-url origin >/dev/null 2>&1; then
+    echo "    skip: no origin remote (${path})"
+    return 0
+  fi
+
+  if git -C "$path" rev-parse --abbrev-ref '@{upstream}' >/dev/null 2>&1; then
+    git -C "$path" push
+  else
+    echo "    no upstream; pushing -u origin ${branch}"
+    git -C "$path" push -u origin "$branch"
+  fi
+}
+
+push_named() {
+  local name="$1"
+  local path
+  if ! path="$(resolve_repo "$name")"; then
+    echo "==> ${name}"
+    echo "    skip: not found"
+    return 0
+  fi
+  push_repo "$name" "$path"
+}
+
+# Dependency order: specs → Imp Rust → Aura products → workbench
+push_named "imp-spec"
+push_named "imp-rs"
+push_named "aura-engine"
+push_named "aura-editor"
+push_repo "aura-workbench" "$WORKBENCH_ROOT"
