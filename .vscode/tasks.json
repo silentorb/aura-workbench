@@ -21,7 +21,7 @@
         "showReuseMessage": true,
         "clear": false
       },
-      "detail": "Cross-compile aura-editor.exe via editor-windows image; output goes to AURA_EDITOR_WIN_OUT (/out). Requires Dev Container rebuild for docker-outside-of-docker."
+      "detail": "Cross-compile aura-editor.exe via editor-windows image; copies exe + engine demos/*.json to AURA_EDITOR_WIN_OUT (/out). Requires Dev Container rebuild for docker-outside-of-docker."
     }
   ]
 }

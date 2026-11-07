@@ -67,7 +67,7 @@ docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml ex
 
 ## Commands (editor Windows cross-compile)
 
-On-demand `editor-windows` image (not started with the Dev Container). Output `.exe` is written to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`).
+On-demand `editor-windows` image (not started with the Dev Container). Output `.exe` and a `demos/` copy of `aura-engine/demos/*.json` are written to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`).
 
 The engine Dev Container includes **docker-outside-of-docker** so the Docker CLI can talk to the host daemon. After changing `devcontainer.json` features, rebuild/reopen the container.
 

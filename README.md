@@ -66,7 +66,8 @@ docker compose -f .devcontainer/docker-compose.yml build
 
 Set `AURA_EDITOR_WIN_OUT` in `.devcontainer/.env` to a host directory for the output `.exe`
 (default `../.win-out`). Point it at a Windows-visible path (e.g. `/mnt/d/AuraEditor`) to run
-the binary from Windows Explorer.
+the binary from Windows Explorer. The export also copies engine demo graphs
+(`aura-engine/demos/*.json`, including `instruments.json`) to `demos/` next to the `.exe`.
 
 The engine container uses **docker-outside-of-docker** so this works from the attached Dev Container
 (rebuild/reopen after feature changes). Prefer the wrapper (or the **Build editor (Windows)** task)
@@ -79,7 +80,7 @@ bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh
 ## Paths
 
 Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling repos (`../../aura-engine`, etc.).
-`AURA_EDITOR_WIN_OUT` controls where `aura-editor.exe` is written.
+`AURA_EDITOR_WIN_OUT` controls where `aura-editor.exe` and the `demos/` folder are written.
 
 ## Repos
 

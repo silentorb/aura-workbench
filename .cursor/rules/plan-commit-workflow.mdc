@@ -1,5 +1,5 @@
 ---
-description: Include per-repo commit strategy in every Cursor plan; defer commits until user explicitly requests
+description: Include per-repo commit strategy in every Cursor plan; rebuild Windows editor exe when editor is in scope; defer commits until user explicitly requests
 alwaysApply: true
 ---
 
@@ -33,15 +33,25 @@ Default: **one commit per affected repo** (not one squashed commit across repos)
 
 For each affected repo specify: repo path (or name), files to include, files to exclude, draft commit message (1–2 sentences, why not what; match recent `git log` style).
 
-### 4. Final todo (always last)
+### 4. Windows editor build (near end)
+
+When the plan touches **aura-editor** or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-editor-windows-build.sh`, `scripts/build-editor-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` **after** implementation/verification todos and **before** `commit-await-approval`:
+
+> Build Windows editor — After implementation and verification, run `bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh` so the exported `.exe` matches the tree just built. Report the output path (from `AURA_EDITOR_WIN_OUT` / `.win-out`) and confirm success before treating the plan as done.
+
+Skip this todo only when the plan clearly does not affect the editor or its Windows build pipeline.
+
+During execution: run that script once work is verified; do not leave the host `.exe` stale relative to plan-scoped editor changes.
+
+### 5. Final todo (always last)
 
 Add frontmatter todo `commit-await-approval` as the **last** item:
 
-> Commit (await user approval) — After implementation and verification, re-run git status/diff per repo, reconcile with this strategy, commit only when the user explicitly requests it.
+> Commit (await user approval) — After implementation and verification (and the Windows editor build when applicable), re-run git status/diff per repo, reconcile with this strategy, commit only when the user explicitly requests it.
 
 Keep `pending` during planning and implementation unless the user asks to commit.
 
-### 5. Commit strategy section template
+### 6. Commit strategy section template
 
 ```markdown
 ## Commit strategy
