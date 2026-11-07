@@ -96,3 +96,9 @@ docker run --rm \
   -w /workspaces/aura-workbench/.mnt/aura-editor \
   "$IMAGE" \
   bash "$CONTAINER_SCRIPT"
+
+echo "Export host path: $HOST_OUT"
+if ! docker run --rm -v "$HOST_OUT:/out:ro" alpine ls -l --full-time /out/aura-editor.exe; then
+  echo "warning: could not list $HOST_OUT/aura-editor.exe" >&2
+  echo "Check AURA_EDITOR_WIN_OUT in .devcontainer/.env" >&2
+fi
