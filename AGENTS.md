@@ -26,6 +26,7 @@ Expected container paths when attached to the **engine** service (`workspaceFold
 | `.mnt/imp-rs` | `imp-rs` |
 | `.mnt/imp-spec` | `imp-spec` |
 | `.mnt/imp-ts` | `imp-ts` (read-only) |
+| `.mnt/mir` | `mir` (read-only) |
 
 Imp is also bind-mounted at `.mnt/aura-engine/.mnt/imp-*` so Cargo path deps inside the engine tree keep working.
 

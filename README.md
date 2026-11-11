@@ -17,6 +17,7 @@ An on-demand **editor-windows** service cross-compiles the editor for Windows (`
   imp-rs/
   imp-spec/
   imp-ts/
+  mir/
 ```
 
 Inside the container, siblings appear under the workbench `.mnt/` tree:
@@ -29,6 +30,7 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
     imp-rs/
     imp-spec/
     imp-ts/
+    mir/
 ```
 
 ## Quick start

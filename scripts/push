@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Push writable workspace sibling repos to their remotes in dependency order
-# (dependencies before dependents). Skips read-only mounts (imp-ts).
+# (dependencies before dependents). Skips read-only mounts (imp-ts, mir).
 #
 # Usage (from workbench root, host or container):
 #   ./scripts/push
@@ -13,7 +13,7 @@ Usage: ./scripts/push
 Push current branches of writable workspace repos to origin, in dependency
 order: imp-spec → imp-rs → aura-engine → aura-editor → aura-workbench.
 
-Skips imp-ts (mounted read-only in Compose).
+Skips imp-ts and mir (mounted read-only in Compose).
 EOF
 }
 

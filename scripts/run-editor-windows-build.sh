@@ -64,6 +64,7 @@ AURA_EDITOR_PATH=$(load_env AURA_EDITOR_PATH ../../aura-editor)
 IMP_RS_PATH=$(load_env IMP_RS_PATH ../../imp-rs)
 IMP_SPEC_PATH=$(load_env IMP_SPEC_PATH ../../imp-spec)
 IMP_TS_PATH=$(load_env IMP_TS_PATH ../../imp-ts)
+MIR_PATH=$(load_env MIR_PATH ../../mir)
 AURA_EDITOR_WIN_OUT=$(load_env AURA_EDITOR_WIN_OUT ../.win-out)
 
 HOST_ENGINE=$(host_path_from_env "$AURA_ENGINE_PATH")
@@ -71,6 +72,7 @@ HOST_EDITOR=$(host_path_from_env "$AURA_EDITOR_PATH")
 HOST_IMP_RS=$(host_path_from_env "$IMP_RS_PATH")
 HOST_IMP_SPEC=$(host_path_from_env "$IMP_SPEC_PATH")
 HOST_IMP_TS=$(host_path_from_env "$IMP_TS_PATH")
+HOST_MIR=$(host_path_from_env "$MIR_PATH")
 HOST_OUT=$(host_path_from_env "$AURA_EDITOR_WIN_OUT")
 
 # Ensure default in-repo output dir exists on the workbench mount.
@@ -89,6 +91,7 @@ docker run --rm \
   -v "$HOST_IMP_RS:/workspaces/aura-workbench/.mnt/imp-rs" \
   -v "$HOST_IMP_SPEC:/workspaces/aura-workbench/.mnt/imp-spec" \
   -v "$HOST_IMP_TS:/workspaces/aura-workbench/.mnt/imp-ts:ro" \
+  -v "$HOST_MIR:/workspaces/aura-workbench/.mnt/mir:ro" \
   -v "$HOST_IMP_RS:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs" \
   -v "$HOST_IMP_SPEC:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec" \
   -v "$HOST_IMP_TS:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-ts:ro" \
