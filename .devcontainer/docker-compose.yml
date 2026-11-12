@@ -8,12 +8,10 @@ x-mnt-volumes: &mnt-volumes
   - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-workbench/.mnt/aura-editor
   - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
-  - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts:ro
   - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
   # Cargo path deps in aura-engine resolve `.mnt/imp-*` relative to the engine root.
   - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
-  - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-ts:ro
 
 services:
   engine:
@@ -59,11 +57,9 @@ services:
       - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-workbench/.mnt/aura-editor
       - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
-      - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts:ro
       - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
       - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
-      - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-ts:ro
       - ${AURA_EDITOR_WIN_OUT:-../.win-out}:/out
     working_dir: /workspaces/aura-workbench/.mnt/aura-editor
     command: sleep infinity

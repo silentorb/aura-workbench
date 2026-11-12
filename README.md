@@ -16,7 +16,6 @@ An on-demand **editor-windows** service cross-compiles the editor for Windows (`
   aura-editor/
   imp-rs/
   imp-spec/
-  imp-ts/
   mir/
 ```
 
@@ -29,7 +28,6 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
     aura-editor/
     imp-rs/
     imp-spec/
-    imp-ts/
     mir/
 ```
 
