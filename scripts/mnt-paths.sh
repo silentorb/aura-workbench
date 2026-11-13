@@ -6,4 +6,6 @@ AURA_EDITOR="${AURA_EDITOR:-${MNT}/aura-editor}"
 IMP_RS="${IMP_RS:-${MNT}/imp-rs}"
 IMP_SPEC="${IMP_SPEC:-${MNT}/imp-spec}"
 IMP_LAB="${IMP_LAB:-${MNT}/imp-lab}"
+# Temporary: Imp workbench sibling.
+IMP_WORKBENCH="${IMP_WORKBENCH:-${MNT}/imp-workbench}"
 MIR="${MIR:-${MNT}/mir}"

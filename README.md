@@ -79,6 +79,10 @@ over raw `docker compose run`, which would bind-mount container paths the host d
 bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh
 ```
 
+## Agent docs
+
+See [`AGENTS.md`](./AGENTS.md). Planning and publishing skills come from silentorb-agents packages baked into the engine image (`/opt/silentorb-agents/`); rebuild the engine image to bump package versions.
+
 ## Paths
 
 Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling repos (`../../aura-engine`, etc.).

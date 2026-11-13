@@ -26,11 +26,36 @@ Expected container paths when attached to the **engine** service (`workspaceFold
 | `.mnt/imp-rs` | `imp-rs` |
 | `.mnt/imp-spec` | `imp-spec` |
 | `.mnt/imp-lab` | `imp-lab` |
+| `.mnt/imp-workbench` | `imp-workbench` (temporary) |
 | `.mnt/mir` | `mir` (read-only) |
 
 Imp is also bind-mounted at `.mnt/aura-engine/.mnt/imp-*` so Cargo path deps inside the engine tree keep working.
 
 Each mounted repo may have its own `AGENTS.md` and `docs/`. Prefer the nearest `AGENTS.md` and that repo’s `docs/` when working in a given tree.
+
+## Installed agent packages
+
+Silentorb agent skill packages are baked into the engine image under `/opt/silentorb-agents/`. Skills are exposed via `.agents/skills/` symlinks. Follow each package’s `AGENTS.md`:
+
+| Package | AGENTS.md |
+| --- | --- |
+| `silentorb-agents-publishing` | [`/opt/silentorb-agents/silentorb-agents-publishing/AGENTS.md`](/opt/silentorb-agents/silentorb-agents-publishing/AGENTS.md) |
+| `silentorb-agents-planning` | [`/opt/silentorb-agents/silentorb-agents-planning/AGENTS.md`](/opt/silentorb-agents/silentorb-agents-planning/AGENTS.md) |
+
+## Plan verification
+
+| Repo | Full verify |
+| --- | --- |
+| workbench (this repo) | none — tooling/docs only; rebuild compose images when Dockerfiles change |
+| `.mnt/aura-engine` | `cargo test` and `cargo clippy` from that repo |
+| `.mnt/aura-editor` | `cargo test` and `cargo clippy` in the **editor** service |
+| `.mnt/imp-rs` | see that repo’s `AGENTS.md` |
+| `.mnt/imp-spec` | see that repo’s `AGENTS.md` |
+| `.mnt/imp-lab` | see that repo’s `AGENTS.md` |
+| `.mnt/imp-workbench` | see that repo’s `AGENTS.md` |
+| `.mnt/mir` | none — read-only mount |
+
+When a plan touches `aura-editor` or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-editor-windows-build.sh`, `scripts/build-editor-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run `bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh`, report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
 
 ## Cross-repo Rust agent docs
 

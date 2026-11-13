@@ -9,6 +9,8 @@ x-mnt-volumes: &mnt-volumes
   - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
   - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/aura-workbench/.mnt/imp-lab
+  # Temporary: Imp workbench sibling (remove when no longer needed).
+  - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
   - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
   # Cargo path deps in aura-engine resolve `.mnt/imp-*` relative to the engine root.
   - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
@@ -59,6 +61,7 @@ services:
       - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
       - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/aura-workbench/.mnt/imp-lab
+      - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
       - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
       - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
