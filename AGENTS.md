@@ -34,9 +34,9 @@ Each mounted repo may have its own `AGENTS.md` and `docs/`. Prefer the nearest `
 
 ## Cross-repo Rust agent docs
 
-When changing agent docs (or linked style docs that agents are told to follow) with rules that are equally applicable to other **Rust** repos in this workspace (`aura-engine`, `aura-editor`, `imp-rs`), apply those changes across **all** of those repos in the same effort — via durable links (e.g. GitHub URLs) where practical, or mirrored wording where a reverse dependency would be wrong (e.g. Imp must not point at Aura for ownership). Do **not** hardcode co-located relative paths (`.mnt/…`, `../imp-*`, `../aura-*`); product repos should not assume sibling checkout layout. Prefer nearest-repo docs remaining the entry point; shared substance must still be reachable from each Rust repo’s `AGENTS.md` / `docs/rust-style.md`.
+When changing agent docs (or linked style docs that agents are told to follow) with rules that are equally applicable to other **Rust** repos in this workspace (`aura-engine`, `aura-editor`, `imp-rs`, `imp-lab`), apply those changes across **all** of those repos in the same effort — via durable links (e.g. GitHub URLs) where practical, or mirrored wording where a reverse dependency would be wrong (e.g. Imp must not point at Aura for ownership). Do **not** hardcode co-located relative paths (`.mnt/…`, `../imp-*`, `../aura-*`); product repos should not assume sibling checkout layout. Prefer nearest-repo docs remaining the entry point; shared substance must still be reachable from each Rust repo’s `AGENTS.md` / `docs/rust-style.md`.
 
-Rust repos in scope today: `aura-engine`, `aura-editor`, `imp-rs`. Not `imp-spec` (non-Rust) unless a change is language-neutral and separately warranted.
+Rust repos in scope today: `aura-engine`, `aura-editor`, `imp-rs`, `imp-lab`. Not `imp-spec` (non-Rust) unless a change is language-neutral and separately warranted.
 
 ## Commands (engine)
 
