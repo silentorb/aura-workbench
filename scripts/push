@@ -11,7 +11,7 @@ usage() {
 Usage: ./scripts/push
 
 Push current branches of writable workspace repos to origin, in dependency
-order: imp-spec → imp-rs → aura-engine → aura-editor → aura-workbench.
+order: imp-spec → imp-rs → imp-lab → aura-engine → aura-editor → aura-workbench.
 
 Skips mir (mounted read-only in Compose).
 EOF
@@ -97,9 +97,10 @@ push_named() {
   push_repo "$name" "$path"
 }
 
-# Dependency order: specs → Imp Rust → Aura products → workbench
+# Dependency order: specs → Imp Rust → Imp lab → Aura products → workbench
 push_named "imp-spec"
 push_named "imp-rs"
+push_named "imp-lab"
 push_named "aura-engine"
 push_named "aura-editor"
 push_repo "aura-workbench" "$WORKBENCH_ROOT"
