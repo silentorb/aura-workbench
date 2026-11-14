@@ -91,6 +91,15 @@ From the attached engine context:
 docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
 ```
 
+An oversized editor `target/` (stale debug fingerprints) is a **defect**, not expected. Default cap is **8 GiB**. Measure and clean when over:
+
+```bash
+bash /workspaces/aura-workbench/scripts/clean-editor-target-if-large.sh
+# or VS Code / Cursor task: Clean editor target if large
+```
+
+Override the threshold with `AURA_EDITOR_TARGET_MAX_GIB`. Pass `--dry-run` to report without cleaning.
+
 ## Commands (editor Windows cross-compile)
 
 On-demand `editor-windows` image (not started with the Dev Container). Output `.exe` and a `demos/` copy of `aura-engine/demos/*.json` are written to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`).
