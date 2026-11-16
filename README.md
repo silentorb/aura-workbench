@@ -70,6 +70,9 @@ Set `AURA_EDITOR_WIN_OUT` in `.devcontainer/.env` to a host directory for the ou
 (default `../.win-out`). Point it at a Windows-visible path (e.g. `/mnt/d/AuraEditor`) to run
 the binary from Windows Explorer. The export also copies engine demo graphs
 (`aura-engine/demos/*.json`, including `instruments.json`) to `demos/` next to the `.exe`.
+Export I/O is time-bounded: if the configured mount is flaky or locked (common with some
+`/mnt/e/...` WSL paths), the script warns and falls back to the workbench `.win-out`
+instead of hanging; the release build itself is still considered successful.
 
 The engine container uses **docker-outside-of-docker** so this works from the attached Dev Container
 (rebuild/reopen after feature changes). Prefer the wrapper (or the **Build editor (Windows)** task)

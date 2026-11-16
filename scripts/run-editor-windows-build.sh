@@ -103,7 +103,11 @@ docker run --rm \
   bash "$CONTAINER_SCRIPT"
 
 echo "Export host path: $HOST_OUT"
-if ! docker run --rm -v "$HOST_OUT:/out:ro" alpine ls -l --full-time /out/aura-editor.exe; then
-  echo "warning: could not list $HOST_OUT/aura-editor.exe" >&2
+# Verifying a flaky host mount (e.g. /mnt/e) can hang; bound the whole check.
+VERIFY_TIMEOUT_SECS="${AURA_EDITOR_WIN_VERIFY_TIMEOUT_SECS:-30}"
+if ! timeout "$VERIFY_TIMEOUT_SECS" docker run --rm -v "$HOST_OUT:/out:ro" alpine \
+  ls -l --full-time /out/aura-editor.exe; then
+  echo "warning: could not list $HOST_OUT/aura-editor.exe within ${VERIFY_TIMEOUT_SECS}s" >&2
+  echo "warning: build may still have written a fallback under the workbench .win-out" >&2
   echo "Check AURA_EDITOR_WIN_OUT in .devcontainer/.env" >&2
 fi
