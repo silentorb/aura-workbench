@@ -6,7 +6,7 @@ Primary development workspace for Aura. Opens as a Dev Container that starts Com
 - **editor** — derives from the engine image, adds Linux GUI deps for **Iced**; editor build/test/run only (not engine tests)
 - **editor-tauri** — **experimental** Tauri+React UI (Bun + WebKitGTK); Dockerfile owned by **aura-editor** (`docker/Dockerfile`)
 
-An on-demand **editor-windows** service cross-compiles the Iced editor for Windows (`x86_64-pc-windows-msvc` via cargo-xwin). It is not started with the Dev Container.
+An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`cargo-xwin`, plus Bun for Tauri): Iced `aura-editor.exe` and experimental portable `aura-editor-tauri.exe`. It is not started with the Dev Container.
 
 ## Host layout
 
@@ -77,22 +77,29 @@ To build the experimental Tauri image only:
 docker compose -f .devcontainer/docker-compose.yml build editor-tauri
 ```
 
-### Windows editor binary
+### Windows editor binaries
 
-Set `AURA_EDITOR_WIN_OUT` in `.devcontainer/.env` to a host directory for the output `.exe`
+Set `AURA_EDITOR_WIN_OUT` in `.devcontainer/.env` to a host directory for output `.exe` files
 (default `../.win-out`). Point it at a Windows-visible path (e.g. `/mnt/d/AuraEditor`) to run
-the binary from Windows Explorer. The export also copies engine demo graphs
-(`aura-engine/demos/*.json`, including `instruments.json`) to `demos/` next to the `.exe`.
+binaries from Windows Explorer. Both Iced and experimental Tauri exports share this mount.
+
+- **Iced** (`run-editor-windows-build.sh` / task **Build editor (Windows)**): `aura-editor.exe`
+  plus engine demo graphs (`aura-engine/demos/*.json`, including `instruments.json`) under `demos/`.
+- **Experimental Tauri** (`run-editor-tauri-windows-build.sh` / task **Build editor Tauri (Windows)**):
+  portable `aura-editor-tauri.exe` only (no installer). The Windows host needs **WebView2**
+  (normally present via Edge on Win10/11).
+
 Export I/O is time-bounded: if the configured mount is flaky or locked (common with some
 `/mnt/e/...` WSL paths), the script warns and falls back to the workbench `.win-out`
 instead of hanging; the release build itself is still considered successful.
 
 The engine container uses **docker-outside-of-docker** so this works from the attached Dev Container
-(rebuild/reopen after feature changes). Prefer the wrapper (or the **Build editor (Windows)** task)
-over raw `docker compose run`, which would bind-mount container paths the host daemon cannot see:
+(rebuild/reopen after feature changes). Prefer the wrappers (or the build tasks) over raw
+`docker compose run`, which would bind-mount container paths the host daemon cannot see:
 
 ```bash
 bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh
+bash /workspaces/aura-workbench/scripts/run-editor-tauri-windows-build.sh
 ```
 
 ## Agent docs
@@ -102,7 +109,7 @@ See [`AGENTS.md`](./AGENTS.md). Planning and publishing skills come from silento
 ## Paths
 
 Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling repos (`../../aura-engine`, etc.).
-`AURA_EDITOR_WIN_OUT` controls where `aura-editor.exe` and the `demos/` folder are written.
+`AURA_EDITOR_WIN_OUT` controls where Windows exports land (`aura-editor.exe` + `demos/`, and/or `aura-editor-tauri.exe`).
 
 ## Repos
 
@@ -112,7 +119,7 @@ Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling re
 | `aura-engine` | Procedural music engine (Rust) |
 | `aura-editor` | Editor UI (Rust / Iced) |
 
-End users target Windows; daily development is WSL Linux containers. Use the on-demand **editor-windows** service to produce a Windows build.
+End users target Windows; daily development is WSL Linux containers. Use the on-demand **editor-windows** service to produce portable Windows binaries.
 
 ## License
 

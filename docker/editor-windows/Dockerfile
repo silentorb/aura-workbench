@@ -19,3 +19,15 @@ RUN rustup target add x86_64-pc-windows-msvc \
  && rustup component add llvm-tools-preview \
  && cargo install --locked cargo-xwin \
  && cargo xwin cache xwin
+
+# Bun for experimental Tauri frontend builds (same version as aura-editor/docker/Dockerfile).
+ARG BUN_VERSION=1.2.19
+ENV BUN_INSTALL=/home/vscode/.bun
+ENV PATH="${BUN_INSTALL}/bin:${PATH}"
+RUN curl -fsSL "https://bun.sh/install" | bash -s "bun-v${BUN_VERSION}" \
+ && bun --version
+
+USER root
+RUN ln -sf /home/vscode/.bun/bin/bun /usr/local/bin/bun \
+ && ln -sf /home/vscode/.bun/bin/bunx /usr/local/bin/bunx
+USER vscode
