@@ -10,6 +10,7 @@
 |---------|------|
 | `engine` | Cursor attach target. Engine build, clippy, and **engine test suite**. Lean Rust + ALSA image. Includes docker-outside-of-docker for host Docker CLI access. |
 | `editor` | Editor build, test, and run only (Rust + Iced GUI system deps). Derived from the engine image. **Not** for running engine tests. |
+| `editor-tauri` | **Experimental** Tauri+React editor UI (Bun + WebKitGTK). Image Dockerfile is owned by **aura-editor** (`docker/Dockerfile`); Compose only wires the build. Derived from the engine image. **Not** for Iced or engine tests. |
 | `editor-windows` | On-demand Windows MSVC cross-compile for the editor (`cargo-xwin`). Derived from the engine image. **Not** in `runServices`. |
 
 If the engine image later accumulates substantial deps the editor does not need, extract a shared base image instead of deriving editor from engine.
@@ -48,7 +49,7 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | --- | --- |
 | workbench (this repo) | none — tooling/docs only; rebuild compose images when Dockerfiles change |
 | `.mnt/aura-engine` | `cargo test` and `cargo clippy` from that repo |
-| `.mnt/aura-editor` | `cargo test` and `cargo clippy` in the **editor** service |
+| `.mnt/aura-editor` | Iced: `cargo test` / `cargo clippy` with `--workspace --exclude aura_editor_tauri` (editor service). Experimental Tauri: in **editor-tauri**, `cd apps/tauri && bun run build` and `cargo check -p aura_editor_tauri` |
 | `.mnt/imp-rs` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-spec` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-lab` | see that repo’s `AGENTS.md` |
@@ -99,6 +100,28 @@ bash /workspaces/aura-workbench/scripts/clean-editor-target-if-large.sh
 ```
 
 Override the threshold with `AURA_EDITOR_TARGET_MAX_GIB`. Pass `--dry-run` to report without cleaning.
+
+## Commands (editor-tauri, experimental)
+
+Dockerfile: `aura-editor/docker/Dockerfile`. Run **in the editor-tauri service**:
+
+```bash
+cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri
+bun install
+bun run tauri dev
+```
+
+From the attached engine context:
+
+```bash
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run build'
+```
+
+Rebuild the experimental image (pulls in engine via `additional_contexts`):
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml build editor-tauri
+```
 
 ## Commands (editor Windows cross-compile)
 

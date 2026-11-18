@@ -2,7 +2,7 @@
   "name": "Aura Workbench",
   "dockerComposeFile": ["docker-compose.yml"],
   "service": "engine",
-  "runServices": ["engine", "editor"],
+  "runServices": ["engine", "editor", "editor-tauri"],
   "workspaceFolder": "/workspaces/aura-workbench",
   "remoteUser": "vscode",
   "features": {

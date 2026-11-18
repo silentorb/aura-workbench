@@ -1,11 +1,12 @@
 # Aura Workbench
 
-Primary development workspace for Aura. Opens as a Dev Container that starts two Compose services:
+Primary development workspace for Aura. Opens as a Dev Container that starts Compose services:
 
 - **engine** — Rust toolchain + ALSA; Cursor attaches here; home for the **engine test suite**
 - **editor** — derives from the engine image, adds Linux GUI deps for **Iced**; editor build/test/run only (not engine tests)
+- **editor-tauri** — **experimental** Tauri+React UI (Bun + WebKitGTK); Dockerfile owned by **aura-editor** (`docker/Dockerfile`)
 
-An on-demand **editor-windows** service cross-compiles the editor for Windows (`x86_64-pc-windows-msvc` via cargo-xwin). It is not started with the Dev Container.
+An on-demand **editor-windows** service cross-compiles the Iced editor for Windows (`x86_64-pc-windows-msvc` via cargo-xwin). It is not started with the Dev Container.
 
 ## Host layout
 
@@ -55,13 +56,25 @@ cargo clippy
 docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
 ```
 
+### Editor Tauri (experimental, editor-tauri service)
+
+```bash
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run tauri dev'
+```
+
 ### Rebuild images
 
-Editor and editor-windows `FROM` `aura-workbench-engine:local`. Compose declares that build dependency,
+Editor, editor-tauri, and editor-windows `FROM` `aura-workbench-engine:local`. Compose declares that build dependency,
 so one command is enough for the images Dev Containers builds by default:
 
 ```bash
 docker compose -f .devcontainer/docker-compose.yml build
+```
+
+To build the experimental Tauri image only:
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml build editor-tauri
 ```
 
 ### Windows editor binary

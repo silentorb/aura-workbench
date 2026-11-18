@@ -43,6 +43,22 @@ services:
     depends_on:
       - engine
 
+  # Experimental Tauri+React editor UI (Dockerfile owned by aura-editor).
+  editor-tauri:
+    image: aura-editor-tauri:local
+    build:
+      context: ${AURA_EDITOR_PATH:-../../aura-editor}
+      dockerfile: docker/Dockerfile
+      additional_contexts:
+        "aura-workbench-engine:local": "service:engine"
+      args:
+        BASE_IMAGE: aura-workbench-engine:local
+    volumes: *mnt-volumes
+    working_dir: /workspaces/aura-workbench/.mnt/aura-editor
+    command: sleep infinity
+    depends_on:
+      - engine
+
   # On-demand Windows MSVC cross-compile (not in devcontainer runServices).
   editor-windows:
     image: aura-workbench-editor-windows:local
