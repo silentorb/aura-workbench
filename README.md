@@ -18,7 +18,11 @@ An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`c
   imp-rs/
   imp-spec/
   imp-lab/
+  imp-ts/
+  imp-graph-editor/  # React Imp canvas (distinct from Iced imp_graph_editor in imp-lab)
+  imp-graph-view/
   mir/
+  tome/           # temporary read-only mount
 ```
 
 Inside the container, siblings appear under the workbench `.mnt/` tree:
@@ -31,7 +35,11 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
     imp-rs/
     imp-spec/
     imp-lab/
+    imp-ts/
+    imp-graph-editor/
+    imp-graph-view/
     mir/
+    tome/         # temporary, read-only
 ```
 
 ## Quick start
@@ -53,14 +61,19 @@ cargo clippy
 ### Editor (editor service)
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
 ```
 
 ### Editor Tauri (experimental, editor-tauri service)
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run tauri dev'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run tauri dev'
 ```
+
+Do **not** `docker compose up --force-recreate` (or `down`/`restart`) the live
+Dev Container stack from inside the engine session — it hangs agents. New mounts
+need a rebuild/reopen; one-off `docker run --rm` is fine for verify. See
+[`AGENTS.md`](./AGENTS.md) § Live Compose stack.
 
 ### Rebuild images
 

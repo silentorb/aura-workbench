@@ -1,0 +1,31 @@
+---
+description: Never mutate the live Dev Container Compose stack (hangs agents)
+alwaysApply: true
+---
+
+# Live Compose stack — no recreate
+
+You are attached to the **engine** service of the running
+`aura-workbench_devcontainer` stack. Mutating that live stack hangs the agent.
+
+## Forbidden (do not run)
+
+- `docker compose … up` / `down` / `stop` / `restart` / `kill` on this project
+- `--force-recreate`, volume renew, or any recreate of `engine` / `editor` /
+  `editor-tauri`
+- Recreating containers “to pick up new mounts”
+
+Do **not** probe or reproduce these hangs either.
+
+## Required alternatives
+
+- Sibling work: `docker compose … exec -T <service> bash -lc '…'`
+- New mounts / `.env` path changes: ask the user to **rebuild/reopen**; do not
+  recreate services
+- Verify without a suitable running service: one-off `docker run --rm` with
+  **host** bind mounts (see `scripts/run-editor-*-windows-build.sh`)
+- Image changes: `docker compose … build` is OK; do not recreate live containers
+  to apply mid-session
+
+Use `timeout` on non-trivial Docker CLI calls. Full detail:
+[`AGENTS.md`](../../AGENTS.md) § Live Compose stack — hang avoidance.

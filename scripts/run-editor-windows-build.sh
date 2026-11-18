@@ -64,6 +64,9 @@ AURA_EDITOR_PATH=$(load_env AURA_EDITOR_PATH ../../aura-editor)
 IMP_RS_PATH=$(load_env IMP_RS_PATH ../../imp-rs)
 IMP_SPEC_PATH=$(load_env IMP_SPEC_PATH ../../imp-spec)
 IMP_LAB_PATH=$(load_env IMP_LAB_PATH ../../imp-lab)
+IMP_TS_PATH=$(load_env IMP_TS_PATH ../../imp-ts)
+IMP_GRAPH_EDITOR_PATH=$(load_env IMP_GRAPH_EDITOR_PATH ../../imp-graph-editor)
+IMP_GRAPH_VIEW_PATH=$(load_env IMP_GRAPH_VIEW_PATH ../../imp-graph-view)
 IMP_WORKBENCH_PATH=$(load_env IMP_WORKBENCH_PATH ../../imp-workbench)
 MIR_PATH=$(load_env MIR_PATH ../../mir)
 AURA_EDITOR_WIN_OUT=$(load_env AURA_EDITOR_WIN_OUT ../.win-out)
@@ -73,6 +76,9 @@ HOST_EDITOR=$(host_path_from_env "$AURA_EDITOR_PATH")
 HOST_IMP_RS=$(host_path_from_env "$IMP_RS_PATH")
 HOST_IMP_SPEC=$(host_path_from_env "$IMP_SPEC_PATH")
 HOST_IMP_LAB=$(host_path_from_env "$IMP_LAB_PATH")
+HOST_IMP_TS=$(host_path_from_env "$IMP_TS_PATH")
+HOST_IMP_GRAPH_EDITOR=$(host_path_from_env "$IMP_GRAPH_EDITOR_PATH")
+HOST_IMP_GRAPH_VIEW=$(host_path_from_env "$IMP_GRAPH_VIEW_PATH")
 HOST_IMP_WORKBENCH=$(host_path_from_env "$IMP_WORKBENCH_PATH")
 HOST_MIR=$(host_path_from_env "$MIR_PATH")
 HOST_OUT=$(host_path_from_env "$AURA_EDITOR_WIN_OUT")
@@ -93,6 +99,9 @@ docker run --rm \
   -v "$HOST_IMP_RS:/workspaces/aura-workbench/.mnt/imp-rs" \
   -v "$HOST_IMP_SPEC:/workspaces/aura-workbench/.mnt/imp-spec" \
   -v "$HOST_IMP_LAB:/workspaces/aura-workbench/.mnt/imp-lab" \
+  -v "$HOST_IMP_TS:/workspaces/aura-workbench/.mnt/imp-ts" \
+  -v "$HOST_IMP_GRAPH_EDITOR:/workspaces/aura-workbench/.mnt/imp-graph-editor" \
+  -v "$HOST_IMP_GRAPH_VIEW:/workspaces/aura-workbench/.mnt/imp-graph-view" \
   -v "$HOST_IMP_WORKBENCH:/workspaces/aura-workbench/.mnt/imp-workbench" \
   -v "$HOST_MIR:/workspaces/aura-workbench/.mnt/mir:ro" \
   -v "$HOST_IMP_RS:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs" \

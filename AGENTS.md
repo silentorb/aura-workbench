@@ -27,10 +27,16 @@ Expected container paths when attached to the **engine** service (`workspaceFold
 | `.mnt/imp-rs` | `imp-rs` |
 | `.mnt/imp-spec` | `imp-spec` |
 | `.mnt/imp-lab` | `imp-lab` |
+| `.mnt/imp-ts` | `imp-ts` |
+| `.mnt/imp-graph-editor` | `imp-graph-editor` (React/TS Imp canvas; not the Iced crate in `imp-lab`) |
+| `.mnt/imp-graph-view` | `imp-graph-view` |
 | `.mnt/imp-workbench` | `imp-workbench` (temporary) |
 | `.mnt/mir` | `mir` (read-only) |
+| `.mnt/tome` | `tome` (temporary, read-only) |
 
 Imp is also bind-mounted at `.mnt/aura-engine/.mnt/imp-*` so Cargo path deps inside the engine tree keep working.
+
+`imp-graph-editor` is the shared **React** Imp operator canvas. The Iced Rust crate `imp_graph_editor` remains in `imp-lab`.
 
 Each mounted repo may have its own `AGENTS.md` and `docs/`. Prefer the nearest `AGENTS.md` and that repo’s `docs/` when working in a given tree.
 
@@ -53,8 +59,12 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | `.mnt/imp-rs` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-spec` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-lab` | see that repo’s `AGENTS.md` |
+| `.mnt/imp-ts` | see that repo’s `AGENTS.md` |
+| `.mnt/imp-graph-editor` | `bun run test` from that repo (run in **editor-tauri**; needs sibling `imp-ts`) |
+| `.mnt/imp-graph-view` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-workbench` | see that repo’s `AGENTS.md` |
 | `.mnt/mir` | none — read-only mount |
+| `.mnt/tome` | none — temporary read-only mount |
 
 When a plan touches `aura-editor` or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-editor-windows-build.sh`, `scripts/build-editor-windows.sh`, `scripts/run-editor-tauri-windows-build.sh`, `scripts/build-editor-tauri-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run the affected wrapper (`run-editor-windows-build.sh` and/or `run-editor-tauri-windows-build.sh`), report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
 
@@ -63,6 +73,34 @@ When a plan touches `aura-editor` or the Windows editor build path (`.devcontain
 When changing agent docs (or linked style docs that agents are told to follow) with rules that are equally applicable to other **Rust** repos in this workspace (`aura-engine`, `aura-editor`, `imp-rs`, `imp-lab`), apply those changes across **all** of those repos in the same effort — via durable links (e.g. GitHub URLs) where practical, or mirrored wording where a reverse dependency would be wrong (e.g. Imp must not point at Aura for ownership). Do **not** hardcode co-located relative paths (`.mnt/…`, `../imp-*`, `../aura-*`); product repos should not assume sibling checkout layout. Prefer nearest-repo docs remaining the entry point; shared substance must still be reachable from each Rust repo’s `AGENTS.md` / `docs/rust-style.md`.
 
 Rust repos in scope today: `aura-engine`, `aura-editor`, `imp-rs`, `imp-lab`. Not `imp-spec` (non-Rust) unless a change is language-neutral and separately warranted.
+
+## Live Compose stack — hang avoidance (hard rules)
+
+Agents attach to the **engine** service of the running Dev Container stack
+(`aura-workbench_devcontainer`). Mutating that live stack from inside the session
+**hangs the agent** (docker-outside-of-docker + Compose recreate/stop of sibling
+or attach services). This has already stalled plan execution mid-flight.
+
+**Never** run these against the live workbench Compose project from an agent
+session (with or without `timeout`):
+
+- `docker compose … up` / `down` / `stop` / `restart` / `kill`
+- any `--force-recreate`, `--renew-anon-volumes`, or recreate-by-`run` of
+  `engine`, `editor`, or `editor-tauri`
+- recreating containers “so a new mount appears”
+
+**Do instead:**
+
+| Need | Safe approach |
+|------|----------------|
+| Run editor / editor-tauri commands | `docker compose … exec -T <service> bash -lc '…'` (service already up) |
+| New/changed bind mounts or `.env` paths | Tell the user to **rebuild/reopen** the Dev Container; do not recreate services yourself |
+| Verify when `exec` is wrong/unavailable | One-off `docker run --rm` with **host** bind mounts (same pattern as `scripts/run-editor-*-windows-build.sh`); never `compose up` |
+| Image Dockerfile / feature changes | `docker compose … build <service>` is OK; applying it still needs user rebuild/reopen for the attach target |
+
+Always pass `-T` on `exec`. Prefer `timeout` on any Docker CLI call that is not a
+trivial `ps`/`images` query. Read-only `docker compose ps` / `build` / `config`
+are fine.
 
 ## Commands (engine)
 
@@ -89,7 +127,7 @@ cargo run
 From the attached engine context:
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
 ```
 
 An oversized editor `target/` (stale debug fingerprints) is a **defect**, not expected. Default cap is **8 GiB**. Measure and clean when over:
@@ -114,7 +152,7 @@ bun run tauri dev
 From the attached engine context:
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run build'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run build'
 ```
 
 Rebuild the experimental image (pulls in engine via `additional_contexts`):
@@ -122,6 +160,10 @@ Rebuild the experimental image (pulls in engine via `additional_contexts`):
 ```bash
 docker compose -f .devcontainer/docker-compose.yml build editor-tauri
 ```
+
+Building the image does **not** require recreating the live `editor-tauri`
+container mid-session. Use `exec -T` on the running service, or a one-off
+`docker run --rm`, until the user rebuilds/reopens.
 
 ## Commands (editor Windows cross-compile)
 

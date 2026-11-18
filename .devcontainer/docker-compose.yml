@@ -9,9 +9,14 @@ x-mnt-volumes: &mnt-volumes
   - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
   - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/aura-workbench/.mnt/imp-lab
+  - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts
+  - ${IMP_GRAPH_EDITOR_PATH:-../../imp-graph-editor}:/workspaces/aura-workbench/.mnt/imp-graph-editor
+  - ${IMP_GRAPH_VIEW_PATH:-../../imp-graph-view}:/workspaces/aura-workbench/.mnt/imp-graph-view
   # Temporary: Imp workbench sibling (remove when no longer needed).
   - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
   - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
+  # Temporary: tome sibling, read-only (remove when no longer needed).
+  - ${TOME_PATH:-../../tome}:/workspaces/aura-workbench/.mnt/tome:ro
   # Cargo path deps in aura-engine resolve `.mnt/imp-*` relative to the engine root.
   - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
@@ -77,8 +82,12 @@ services:
       - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
       - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/aura-workbench/.mnt/imp-lab
+      - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts
+      - ${IMP_GRAPH_EDITOR_PATH:-../../imp-graph-editor}:/workspaces/aura-workbench/.mnt/imp-graph-editor
+      - ${IMP_GRAPH_VIEW_PATH:-../../imp-graph-view}:/workspaces/aura-workbench/.mnt/imp-graph-view
       - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
       - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
+      - ${TOME_PATH:-../../tome}:/workspaces/aura-workbench/.mnt/tome:ro
       - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
       - ${AURA_EDITOR_WIN_OUT:-../.win-out}:/out
