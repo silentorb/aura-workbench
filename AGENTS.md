@@ -29,7 +29,7 @@ Expected container paths when attached to the **engine** service (`workspaceFold
 | `.mnt/imp-lab` | `imp-lab` |
 | `.mnt/imp-ts` | `imp-ts` |
 | `.mnt/imp-graph-editor` | `imp-graph-editor` (React/TS Imp canvas; not the Iced crate in `imp-lab`) |
-| `.mnt/imp-graph-view` | `imp-graph-view` |
+| `.mnt/imp-graph-view` | `imp-graph-view` (Imp ↔ React Flow converters) |
 | `.mnt/imp-workbench` | `imp-workbench` (temporary) |
 | `.mnt/mir` | `mir` (read-only) |
 | `.mnt/tome` | `tome` (temporary, read-only) |
@@ -61,7 +61,7 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | `.mnt/imp-lab` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-ts` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-graph-editor` | `bun run test` from that repo (run in **editor-tauri**; needs sibling `imp-ts`) |
-| `.mnt/imp-graph-view` | see that repo’s `AGENTS.md` |
+| `.mnt/imp-graph-view` | `bun run test` from that repo (run in **editor-tauri**; needs sibling `imp-ts`) |
 | `.mnt/imp-workbench` | see that repo’s `AGENTS.md` |
 | `.mnt/mir` | none — read-only mount |
 | `.mnt/tome` | none — temporary read-only mount |

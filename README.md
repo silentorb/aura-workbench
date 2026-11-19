@@ -20,7 +20,7 @@ An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`c
   imp-lab/
   imp-ts/
   imp-graph-editor/  # React Imp canvas (distinct from Iced imp_graph_editor in imp-lab)
-  imp-graph-view/
+  imp-graph-view/  # Imp ↔ React Flow converters
   mir/
   tome/           # temporary read-only mount
 ```
