@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cross-compile experimental aura_editor_tauri for Windows (MSVC) and copy the
+# Cross-compile experimental imp_lab_tauri for Windows (MSVC) and copy the
 # portable release exe to /out. Frontend is built with Bun first; assets embed via
 # tauri-build. Export I/O to flaky host mounts is time-bounded and falls back to
 # the workbench .win-out when /out cannot be written promptly.
@@ -8,10 +8,10 @@ set -euo pipefail
 OUT_DIR=/out
 FALLBACK_OUT=/workspaces/aura-workbench/.win-out
 TARGET=x86_64-pc-windows-msvc
-EXE_NAME=aura-editor-tauri.exe
-CARGO_EXE_NAME=aura_editor_tauri.exe
-EDITOR_DIR=/workspaces/aura-workbench/.mnt/aura-editor
-TAURI_APP="$EDITOR_DIR/apps/tauri"
+EXE_NAME=imp-lab-tauri.exe
+CARGO_EXE_NAME=imp_lab_tauri.exe
+LAB_DIR=/workspaces/aura-workbench/.mnt/imp-lab
+TAURI_APP="$LAB_DIR/apps/tauri"
 # Bound flaky 9p/drvfs I/O so a wedged mount cannot hang the whole export.
 COPY_TIMEOUT_SECS="${AURA_EDITOR_WIN_COPY_TIMEOUT_SECS:-20}"
 IO_TIMEOUT_SECS="${AURA_EDITOR_WIN_IO_TIMEOUT_SECS:-5}"
@@ -79,15 +79,15 @@ cd "$TAURI_APP"
 bun install
 TAURI_ENV_PLATFORM=windows bun run build
 
-cd "$EDITOR_DIR"
+cd "$LAB_DIR"
 
-echo "Building aura_editor_tauri for $TARGET (release, custom-protocol)..."
+echo "Building imp_lab_tauri for $TARGET (release, custom-protocol)..."
 # Bind mounts can leave mtimes/fingerprint stale across the docker-outside-of-docker
 # hop; clean the package so this export always rebuilds Tauri host sources.
 # custom-protocol is what `tauri build` enables so the WebView serves embedded
 # frontendDist instead of build.devUrl (localhost:1420).
-cargo clean -p aura_editor_tauri --release --target "$TARGET"
-cargo xwin build -p aura_editor_tauri --release --target "$TARGET" --features custom-protocol
+cargo clean -p imp_lab_tauri --release --target "$TARGET"
+cargo xwin build -p imp_lab_tauri --release --target "$TARGET" --features custom-protocol
 
 SRC="target/${TARGET}/release/${CARGO_EXE_NAME}"
 if [[ ! -f "$SRC" ]]; then
@@ -115,6 +115,6 @@ fi
 
 if [[ "$EXPORT_OK" -eq 0 ]]; then
   echo "warning: build succeeded but export failed." >&2
-  echo "warning: binary remains at $EDITOR_DIR/$SRC" >&2
+  echo "warning: binary remains at $LAB_DIR/$SRC" >&2
   exit 0
 fi

@@ -7,7 +7,6 @@ IMP_RS="${IMP_RS:-${MNT}/imp-rs}"
 IMP_SPEC="${IMP_SPEC:-${MNT}/imp-spec}"
 IMP_LAB="${IMP_LAB:-${MNT}/imp-lab}"
 IMP_TS="${IMP_TS:-${MNT}/imp-ts}"
-IMP_GRAPH_EDITOR="${IMP_GRAPH_EDITOR:-${MNT}/imp-graph-editor}"
 IMP_GRAPH_VIEW="${IMP_GRAPH_VIEW:-${MNT}/imp-graph-view}"
 # Temporary: Imp workbench sibling.
 IMP_WORKBENCH="${IMP_WORKBENCH:-${MNT}/imp-workbench}"

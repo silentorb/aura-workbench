@@ -10,8 +10,8 @@
 |---------|------|
 | `engine` | Cursor attach target. Engine build, clippy, and **engine test suite**. Lean Rust + ALSA image. Includes docker-outside-of-docker for host Docker CLI access. |
 | `editor` | Editor build, test, and run only (Rust + Iced GUI system deps). Derived from the engine image. **Not** for running engine tests. |
-| `editor-tauri` | **Experimental** Tauri+React editor UI (Bun + WebKitGTK). Image Dockerfile is owned by **aura-editor** (`docker/Dockerfile`); Compose only wires the build. Derived from the engine image. **Not** for Iced or engine tests. |
-| `editor-windows` | On-demand Windows MSVC cross-compile (`cargo-xwin` + Bun). Builds Iced `aura-editor.exe` and experimental portable `aura-editor-tauri.exe` into `AURA_EDITOR_WIN_OUT`. Derived from the engine image. **Not** in `runServices`. |
+| `editor-tauri` | **Experimental** Imp Lab Tauri+React host (Bun + WebKitGTK). Image Dockerfile is owned by **imp-lab** (`docker/Dockerfile`); Compose only wires the build. Derived from the engine image. **Not** for Iced or engine tests. |
+| `editor-windows` | On-demand Windows MSVC cross-compile (`cargo-xwin` + Bun). Builds Iced `aura-editor.exe` and experimental portable `imp-lab-tauri.exe` into `AURA_EDITOR_WIN_OUT`. Derived from the engine image. **Not** in `runServices`. |
 
 If the engine image later accumulates substantial deps the editor does not need, extract a shared base image instead of deriving editor from engine.
 
@@ -28,15 +28,11 @@ Expected container paths when attached to the **engine** service (`workspaceFold
 | `.mnt/imp-spec` | `imp-spec` |
 | `.mnt/imp-lab` | `imp-lab` |
 | `.mnt/imp-ts` | `imp-ts` |
-| `.mnt/imp-graph-editor` | `imp-graph-editor` (React/TS Imp canvas; not the Iced crate in `imp-lab`) |
 | `.mnt/imp-graph-view` | `imp-graph-view` (Imp ↔ React Flow converters) |
 | `.mnt/imp-workbench` | `imp-workbench` (temporary) |
 | `.mnt/mir` | `mir` (read-only) |
-| `.mnt/tome` | `tome` (temporary, read-only) |
 
 Imp is also bind-mounted at `.mnt/aura-engine/.mnt/imp-*` so Cargo path deps inside the engine tree keep working.
-
-`imp-graph-editor` is the shared **React** Imp operator canvas. The Iced Rust crate `imp_graph_editor` remains in `imp-lab`.
 
 Each mounted repo may have its own `AGENTS.md` and `docs/`. Prefer the nearest `AGENTS.md` and that repo’s `docs/` when working in a given tree.
 
@@ -55,18 +51,16 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | --- | --- |
 | workbench (this repo) | none — tooling/docs only; rebuild compose images when Dockerfiles change |
 | `.mnt/aura-engine` | `cargo test` and `cargo clippy` from that repo |
-| `.mnt/aura-editor` | Iced: `cargo test` / `cargo clippy` with `--workspace --exclude aura_editor_tauri` (editor service). Experimental Tauri: in **editor-tauri**, `cd apps/tauri && bun run build` and `cargo check -p aura_editor_tauri` |
+| `.mnt/aura-editor` | Iced: `cargo test` / `cargo clippy` (editor service) |
 | `.mnt/imp-rs` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-spec` | see that repo’s `AGENTS.md` |
-| `.mnt/imp-lab` | see that repo’s `AGENTS.md` |
+| `.mnt/imp-lab` | Iced crates: `cargo test` / `cargo clippy -- -D warnings`. Experimental Tauri: in **editor-tauri**, `cd apps/tauri && bun run build` and `cargo check -p imp_lab_tauri` |
 | `.mnt/imp-ts` | see that repo’s `AGENTS.md` |
-| `.mnt/imp-graph-editor` | `bun run test` from that repo (run in **editor-tauri**; needs sibling `imp-ts`) |
 | `.mnt/imp-graph-view` | `bun run test` from that repo (run in **editor-tauri**; needs sibling `imp-ts`) |
 | `.mnt/imp-workbench` | see that repo’s `AGENTS.md` |
 | `.mnt/mir` | none — read-only mount |
-| `.mnt/tome` | none — temporary read-only mount |
 
-When a plan touches `aura-editor` or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-editor-windows-build.sh`, `scripts/build-editor-windows.sh`, `scripts/run-editor-tauri-windows-build.sh`, `scripts/build-editor-tauri-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run the affected wrapper (`run-editor-windows-build.sh` and/or `run-editor-tauri-windows-build.sh`), report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
+When a plan touches `aura-editor`, `imp-lab`’s Tauri host, or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-editor-windows-build.sh`, `scripts/build-editor-windows.sh`, `scripts/run-editor-tauri-windows-build.sh`, `scripts/build-editor-tauri-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run the affected wrapper (`run-editor-windows-build.sh` and/or `run-editor-tauri-windows-build.sh`), report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
 
 ## Cross-repo Rust agent docs
 
@@ -139,12 +133,12 @@ bash /workspaces/aura-workbench/scripts/clean-editor-target-if-large.sh
 
 Override the threshold with `AURA_EDITOR_TARGET_MAX_GIB`. Pass `--dry-run` to report without cleaning.
 
-## Commands (editor-tauri, experimental)
+## Commands (editor-tauri, experimental Imp Lab host)
 
-Dockerfile: `aura-editor/docker/Dockerfile`. Run **in the editor-tauri service**:
+Dockerfile: `imp-lab/docker/Dockerfile`. Run **in the editor-tauri service**:
 
 ```bash
-cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri
+cd /workspaces/aura-workbench/.mnt/imp-lab/apps/tauri
 bun install
 bun run tauri dev
 ```
@@ -152,7 +146,7 @@ bun run tauri dev
 From the attached engine context:
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run build'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/imp-lab/apps/tauri && bun run build'
 ```
 
 Rebuild the experimental image (pulls in engine via `additional_contexts`):
@@ -170,11 +164,11 @@ container mid-session. Use `exec -T` on the running service, or a one-off
 On-demand `editor-windows` image (not started with the Dev Container). Artifacts go to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`):
 
 - **Iced:** `aura-editor.exe` plus a `demos/` copy of `aura-engine/demos/*.json`
-- **Experimental Tauri:** portable `aura-editor-tauri.exe` only (no installer). Needs **WebView2** on the Windows host (normally present via Edge).
+- **Experimental Imp Lab Tauri:** portable `imp-lab-tauri.exe` only (no installer). Needs **WebView2** on the Windows host (normally present via Edge).
 
 The engine Dev Container includes **docker-outside-of-docker** so the Docker CLI can talk to the host daemon. After changing `devcontainer.json` features, rebuild/reopen the container.
 
-From the attached engine context (or the VS Code / Cursor tasks **Build editor (Windows)** / **Build editor Tauri (Windows)**):
+From the attached engine context (or the VS Code / Cursor tasks **Build editor (Windows)** / **Build Imp Lab Tauri (Windows)**):
 
 ```bash
 bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh

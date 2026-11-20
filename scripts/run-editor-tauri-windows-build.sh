@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build experimental aura_editor_tauri for Windows via the editor-windows image.
+# Build experimental imp_lab_tauri for Windows via the editor-windows image.
 # Safe to run from the host or from the engine container (docker-outside-of-docker).
 #
 # Nested `docker compose run` would resolve bind mounts against container paths the
 # host daemon cannot see. This script builds with compose, then `docker run`s with
 # host paths derived from LOCAL_WORKSPACE_FOLDER + .devcontainer/.env.
 #
-# Writes a portable aura-editor-tauri.exe to AURA_EDITOR_WIN_OUT (same mount as Iced).
+# Writes a portable imp-lab-tauri.exe to AURA_EDITOR_WIN_OUT (same mount as Iced).
 # Requires WebView2 on the Windows host (normally present via Edge on Win10/11).
 set -euo pipefail
 
@@ -68,7 +68,6 @@ IMP_RS_PATH=$(load_env IMP_RS_PATH ../../imp-rs)
 IMP_SPEC_PATH=$(load_env IMP_SPEC_PATH ../../imp-spec)
 IMP_LAB_PATH=$(load_env IMP_LAB_PATH ../../imp-lab)
 IMP_TS_PATH=$(load_env IMP_TS_PATH ../../imp-ts)
-IMP_GRAPH_EDITOR_PATH=$(load_env IMP_GRAPH_EDITOR_PATH ../../imp-graph-editor)
 IMP_GRAPH_VIEW_PATH=$(load_env IMP_GRAPH_VIEW_PATH ../../imp-graph-view)
 IMP_WORKBENCH_PATH=$(load_env IMP_WORKBENCH_PATH ../../imp-workbench)
 MIR_PATH=$(load_env MIR_PATH ../../mir)
@@ -80,7 +79,6 @@ HOST_IMP_RS=$(host_path_from_env "$IMP_RS_PATH")
 HOST_IMP_SPEC=$(host_path_from_env "$IMP_SPEC_PATH")
 HOST_IMP_LAB=$(host_path_from_env "$IMP_LAB_PATH")
 HOST_IMP_TS=$(host_path_from_env "$IMP_TS_PATH")
-HOST_IMP_GRAPH_EDITOR=$(host_path_from_env "$IMP_GRAPH_EDITOR_PATH")
 HOST_IMP_GRAPH_VIEW=$(host_path_from_env "$IMP_GRAPH_VIEW_PATH")
 HOST_IMP_WORKBENCH=$(host_path_from_env "$IMP_WORKBENCH_PATH")
 HOST_MIR=$(host_path_from_env "$MIR_PATH")
@@ -103,14 +101,13 @@ docker run --rm \
   -v "$HOST_IMP_SPEC:/workspaces/aura-workbench/.mnt/imp-spec" \
   -v "$HOST_IMP_LAB:/workspaces/aura-workbench/.mnt/imp-lab" \
   -v "$HOST_IMP_TS:/workspaces/aura-workbench/.mnt/imp-ts" \
-  -v "$HOST_IMP_GRAPH_EDITOR:/workspaces/aura-workbench/.mnt/imp-graph-editor" \
   -v "$HOST_IMP_GRAPH_VIEW:/workspaces/aura-workbench/.mnt/imp-graph-view" \
   -v "$HOST_IMP_WORKBENCH:/workspaces/aura-workbench/.mnt/imp-workbench" \
   -v "$HOST_MIR:/workspaces/aura-workbench/.mnt/mir:ro" \
   -v "$HOST_IMP_RS:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs" \
   -v "$HOST_IMP_SPEC:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec" \
   -v "$HOST_OUT:/out" \
-  -w /workspaces/aura-workbench/.mnt/aura-editor \
+  -w /workspaces/aura-workbench/.mnt/imp-lab \
   "$IMAGE" \
   bash "$CONTAINER_SCRIPT"
 
@@ -118,8 +115,8 @@ echo "Export host path: $HOST_OUT"
 # Verifying a flaky host mount (e.g. /mnt/e) can hang; bound the whole check.
 VERIFY_TIMEOUT_SECS="${AURA_EDITOR_WIN_VERIFY_TIMEOUT_SECS:-30}"
 if ! timeout "$VERIFY_TIMEOUT_SECS" docker run --rm -v "$HOST_OUT:/out:ro" alpine \
-  ls -l --full-time /out/aura-editor-tauri.exe; then
-  echo "warning: could not list $HOST_OUT/aura-editor-tauri.exe within ${VERIFY_TIMEOUT_SECS}s" >&2
+  ls -l --full-time /out/imp-lab-tauri.exe; then
+  echo "warning: could not list $HOST_OUT/imp-lab-tauri.exe within ${VERIFY_TIMEOUT_SECS}s" >&2
   echo "warning: build may still have written a fallback under the workbench .win-out" >&2
   echo "Check AURA_EDITOR_WIN_OUT in .devcontainer/.env" >&2
 fi

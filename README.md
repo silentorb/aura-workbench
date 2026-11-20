@@ -4,9 +4,9 @@ Primary development workspace for Aura. Opens as a Dev Container that starts Com
 
 - **engine** — Rust toolchain + ALSA; Cursor attaches here; home for the **engine test suite**
 - **editor** — derives from the engine image, adds Linux GUI deps for **Iced**; editor build/test/run only (not engine tests)
-- **editor-tauri** — **experimental** Tauri+React UI (Bun + WebKitGTK); Dockerfile owned by **aura-editor** (`docker/Dockerfile`)
+- **editor-tauri** — **experimental** Imp Lab Tauri+React host (Bun + WebKitGTK); Dockerfile owned by **imp-lab** (`docker/Dockerfile`)
 
-An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`cargo-xwin`, plus Bun for Tauri): Iced `aura-editor.exe` and experimental portable `aura-editor-tauri.exe`. It is not started with the Dev Container.
+An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`cargo-xwin`, plus Bun for Tauri): Iced `aura-editor.exe` and experimental portable `imp-lab-tauri.exe`. It is not started with the Dev Container.
 
 ## Host layout
 
@@ -19,10 +19,8 @@ An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`c
   imp-spec/
   imp-lab/
   imp-ts/
-  imp-graph-editor/  # React Imp canvas (distinct from Iced imp_graph_editor in imp-lab)
   imp-graph-view/  # Imp ↔ React Flow converters
   mir/
-  tome/           # temporary read-only mount
 ```
 
 Inside the container, siblings appear under the workbench `.mnt/` tree:
@@ -36,10 +34,8 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
     imp-spec/
     imp-lab/
     imp-ts/
-    imp-graph-editor/
     imp-graph-view/
     mir/
-    tome/         # temporary, read-only
 ```
 
 ## Quick start
@@ -64,10 +60,10 @@ cargo clippy
 docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
 ```
 
-### Editor Tauri (experimental, editor-tauri service)
+### Imp Lab Tauri (experimental, editor-tauri service)
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor/apps/tauri && bun run tauri dev'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor-tauri bash -lc 'cd /workspaces/aura-workbench/.mnt/imp-lab/apps/tauri && bun run tauri dev'
 ```
 
 Do **not** `docker compose up --force-recreate` (or `down`/`restart`) the live
@@ -98,8 +94,8 @@ binaries from Windows Explorer. Both Iced and experimental Tauri exports share t
 
 - **Iced** (`run-editor-windows-build.sh` / task **Build editor (Windows)**): `aura-editor.exe`
   plus engine demo graphs (`aura-engine/demos/*.json`, including `instruments.json`) under `demos/`.
-- **Experimental Tauri** (`run-editor-tauri-windows-build.sh` / task **Build editor Tauri (Windows)**):
-  portable `aura-editor-tauri.exe` only (no installer). The Windows host needs **WebView2**
+- **Experimental Imp Lab Tauri** (`run-editor-tauri-windows-build.sh` / task **Build Imp Lab Tauri (Windows)**):
+  portable `imp-lab-tauri.exe` only (no installer). The Windows host needs **WebView2**
   (normally present via Edge on Win10/11).
 
 Export I/O is time-bounded: if the configured mount is flaky or locked (common with some
@@ -122,7 +118,7 @@ See [`AGENTS.md`](./AGENTS.md). Planning and publishing skills come from silento
 ## Paths
 
 Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling repos (`../../aura-engine`, etc.).
-`AURA_EDITOR_WIN_OUT` controls where Windows exports land (`aura-editor.exe` + `demos/`, and/or `aura-editor-tauri.exe`).
+`AURA_EDITOR_WIN_OUT` controls where Windows exports land (`aura-editor.exe` + `demos/`, and/or `imp-lab-tauri.exe`).
 
 ## Repos
 
@@ -130,7 +126,8 @@ Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling re
 |------|------|
 | `aura-workbench` | Orchestration (Compose, Dev Container) |
 | `aura-engine` | Procedural music engine (Rust) |
-| `aura-editor` | Editor UI (Rust / Iced) |
+| `aura-editor` | Editor UI (Rust / Iced); audio/domain host |
+| `imp-lab` | Imp graph session + GUI building blocks; experimental Tauri host |
 
 End users target Windows; daily development is WSL Linux containers. Use the on-demand **editor-windows** service to produce portable Windows binaries.
 
