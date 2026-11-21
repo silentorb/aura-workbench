@@ -20,7 +20,6 @@ An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`c
   imp-lab/
   imp-ts/
   imp-graph-view/  # Imp ↔ React Flow converters
-  tome/
   mir/
 ```
 
@@ -36,7 +35,6 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
     imp-lab/
     imp-ts/
     imp-graph-view/
-    tome/
     mir/
 ```
 
