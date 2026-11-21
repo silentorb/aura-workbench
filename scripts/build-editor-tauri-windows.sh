@@ -11,7 +11,10 @@ TARGET=x86_64-pc-windows-msvc
 EXE_NAME=imp-lab-tauri.exe
 CARGO_EXE_NAME=imp_lab_tauri.exe
 LAB_DIR=/workspaces/aura-workbench/.mnt/imp-lab
+ENGINE_DIR=/workspaces/aura-workbench/.mnt/aura-engine
 TAURI_APP="$LAB_DIR/apps/tauri"
+LAB_PACK_SRC="$ENGINE_DIR/lab-pack"
+DLL_NAME=aura_imp_lab_catalogs.dll
 # Bound flaky 9p/drvfs I/O so a wedged mount cannot hang the whole export.
 COPY_TIMEOUT_SECS="${AURA_EDITOR_WIN_COPY_TIMEOUT_SECS:-20}"
 IO_TIMEOUT_SECS="${AURA_EDITOR_WIN_IO_TIMEOUT_SECS:-5}"
@@ -41,6 +44,40 @@ describe_file() {
   fi
 }
 
+export_lab_pack() {
+  local dest_root="$1"
+
+  if [[ ! -f "$LAB_PACK_SRC/extensions.json" ]]; then
+    echo "warning: Lab pack missing at $LAB_PACK_SRC (skipping extensions sidecar)" >&2
+    return 0
+  fi
+  if [[ ! -f "$DLL_SRC" ]]; then
+    echo "warning: Aura catalog dll missing at $DLL_SRC (skipping extensions sidecar)" >&2
+    return 0
+  fi
+
+  if ! timed_cp_file "$LAB_PACK_SRC/extensions.json" "$dest_root"; then
+    echo "warning: failed copying extensions.json to $dest_root" >&2
+    return 1
+  fi
+  if ! io_ok mkdir -p "$dest_root/extensions" "$dest_root/catalogs"; then
+    echo "warning: failed creating pack dirs under $dest_root" >&2
+    return 1
+  fi
+  if ! timed_cp_file "$DLL_SRC" "$dest_root/extensions" "$DLL_NAME"; then
+    echo "warning: failed copying $DLL_NAME to $dest_root/extensions" >&2
+    return 1
+  fi
+  if [[ -f "$LAB_PACK_SRC/catalogs/instruments.json" ]]; then
+    if ! timed_cp_file "$LAB_PACK_SRC/catalogs/instruments.json" "$dest_root/catalogs"; then
+      echo "warning: failed copying instruments.json" >&2
+      return 1
+    fi
+  fi
+  echo "Wrote Lab pack under $dest_root (extensions.json + extensions/$DLL_NAME)"
+  return 0
+}
+
 export_exe() {
   local dest_root="$1"
 
@@ -58,6 +95,7 @@ export_exe() {
     return 1
   fi
   echo "Wrote $dest_root/$EXE_NAME ($(describe_file "$dest_root/$EXE_NAME"))"
+  export_lab_pack "$dest_root" || true
   return 0
 }
 
@@ -89,10 +127,27 @@ echo "Building imp_lab_tauri for $TARGET (release, custom-protocol)..."
 cargo clean -p imp_lab_tauri --release --target "$TARGET"
 cargo xwin build -p imp_lab_tauri --release --target "$TARGET" --features custom-protocol
 
-SRC="target/${TARGET}/release/${CARGO_EXE_NAME}"
+SRC="$LAB_DIR/target/${TARGET}/release/${CARGO_EXE_NAME}"
 if [[ ! -f "$SRC" ]]; then
   echo "error: expected binary not found: $SRC" >&2
   exit 1
+fi
+
+DLL_SRC=""
+if [[ ! -d "$ENGINE_DIR" ]]; then
+  echo "warning: aura-engine not found at $ENGINE_DIR; skipping Aura catalog dll" >&2
+else
+  echo "Building aura_imp_lab_catalogs cdylib for $TARGET (release)..."
+  if (cd "$ENGINE_DIR" && cargo xwin build -p aura_imp_lab_catalogs --release --target "$TARGET"); then
+    DLL_SRC="$ENGINE_DIR/target/${TARGET}/release/${DLL_NAME}"
+    if [[ ! -f "$DLL_SRC" ]]; then
+      echo "warning: expected dll not found: $DLL_SRC" >&2
+      DLL_SRC=""
+    fi
+  else
+    echo "warning: aura_imp_lab_catalogs Windows build failed; skipping pack dll" >&2
+    DLL_SRC=""
+  fi
 fi
 
 EXPORT_OK=0

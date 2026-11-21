@@ -30,6 +30,7 @@ Expected container paths when attached to the **engine** service (`workspaceFold
 | `.mnt/imp-ts` | `imp-ts` |
 | `.mnt/imp-graph-view` | `imp-graph-view` (Imp ↔ React Flow converters) |
 | `.mnt/imp-workbench` | `imp-workbench` (temporary) |
+| `.mnt/tome` | `tome` |
 | `.mnt/mir` | `mir` (read-only) |
 
 Imp is also bind-mounted at `.mnt/aura-engine/.mnt/imp-*` so Cargo path deps inside the engine tree keep working.
@@ -58,6 +59,7 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | `.mnt/imp-ts` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-graph-view` | `bun run test` from that repo (run in **editor-tauri**; needs sibling `imp-ts`) |
 | `.mnt/imp-workbench` | see that repo’s `AGENTS.md` |
+| `.mnt/tome` | see that repo’s `AGENTS.md` |
 | `.mnt/mir` | none — read-only mount |
 
 When a plan touches `aura-editor`, `imp-lab`’s Tauri host, or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-editor-windows-build.sh`, `scripts/build-editor-windows.sh`, `scripts/run-editor-tauri-windows-build.sh`, `scripts/build-editor-tauri-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run the affected wrapper (`run-editor-windows-build.sh` and/or `run-editor-tauri-windows-build.sh`), report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
@@ -164,7 +166,7 @@ container mid-session. Use `exec -T` on the running service, or a one-off
 On-demand `editor-windows` image (not started with the Dev Container). Artifacts go to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`):
 
 - **Iced:** `aura-editor.exe` plus a `demos/` copy of `aura-engine/demos/*.json`
-- **Experimental Imp Lab Tauri:** portable `imp-lab-tauri.exe` only (no installer). Needs **WebView2** on the Windows host (normally present via Edge).
+- **Experimental Imp Lab Tauri:** portable `imp-lab-tauri.exe` plus optional Aura Lab pack (`extensions.json`, `extensions/aura_imp_lab_catalogs.dll`, `catalogs/`). Needs **WebView2** on the Windows host (normally present via Edge). Iced `aura-editor` is deprecated; prefer this path for new editor work.
 
 The engine Dev Container includes **docker-outside-of-docker** so the Docker CLI can talk to the host daemon. After changing `devcontainer.json` features, rebuild/reopen the container.
 

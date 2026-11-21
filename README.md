@@ -20,6 +20,7 @@ An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`c
   imp-lab/
   imp-ts/
   imp-graph-view/  # Imp ↔ React Flow converters
+  tome/
   mir/
 ```
 
@@ -35,6 +36,7 @@ Inside the container, siblings appear under the workbench `.mnt/` tree:
     imp-lab/
     imp-ts/
     imp-graph-view/
+    tome/
     mir/
 ```
 
@@ -94,9 +96,9 @@ binaries from Windows Explorer. Both Iced and experimental Tauri exports share t
 
 - **Iced** (`run-editor-windows-build.sh` / task **Build editor (Windows)**): `aura-editor.exe`
   plus engine demo graphs (`aura-engine/demos/*.json`, including `instruments.json`) under `demos/`.
-- **Experimental Imp Lab Tauri** (`run-editor-tauri-windows-build.sh` / task **Build Imp Lab Tauri (Windows)**):
-  portable `imp-lab-tauri.exe` only (no installer). The Windows host needs **WebView2**
-  (normally present via Edge on Win10/11).
+- **Experimental Imp Lab Tauri** (`run-editor-tauri-windows-build.sh` / task **Build Imp Lab Tauri (Windows)**; preferred over deprecated Iced `aura-editor`):
+  portable `imp-lab-tauri.exe` plus Aura Lab pack (`extensions.json`, catalog `.dll`, `catalogs/`).
+  The Windows host needs **WebView2** (normally present via Edge on Win10/11).
 
 Export I/O is time-bounded: if the configured mount is flaky or locked (common with some
 `/mnt/e/...` WSL paths), the script warns and falls back to the workbench `.win-out`
