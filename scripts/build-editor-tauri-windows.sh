@@ -14,7 +14,8 @@ LAB_DIR=/workspaces/aura-workbench/.mnt/imp-lab
 ENGINE_DIR=/workspaces/aura-workbench/.mnt/aura-engine
 TAURI_APP="$LAB_DIR/apps/tauri"
 LAB_PACK_SRC="$ENGINE_DIR/lab-pack"
-DLL_NAME=aura_imp_lab_catalogs.dll
+CATALOG_DLL_NAME=aura_imp_lab_catalogs.dll
+PLAYBACK_DLL_NAME=aura_imp_lab_playback.dll
 # Bound flaky 9p/drvfs I/O so a wedged mount cannot hang the whole export.
 COPY_TIMEOUT_SECS="${AURA_EDITOR_WIN_COPY_TIMEOUT_SECS:-20}"
 IO_TIMEOUT_SECS="${AURA_EDITOR_WIN_IO_TIMEOUT_SECS:-5}"
@@ -51,8 +52,8 @@ export_lab_pack() {
     echo "warning: Lab pack missing at $LAB_PACK_SRC (skipping extensions sidecar)" >&2
     return 0
   fi
-  if [[ ! -f "$DLL_SRC" ]]; then
-    echo "warning: Aura catalog dll missing at $DLL_SRC (skipping extensions sidecar)" >&2
+  if [[ ! -f "$CATALOG_DLL_SRC" ]]; then
+    echo "warning: Aura catalog dll missing at $CATALOG_DLL_SRC (skipping extensions sidecar)" >&2
     return 0
   fi
 
@@ -64,9 +65,17 @@ export_lab_pack() {
     echo "warning: failed creating pack dirs under $dest_root" >&2
     return 1
   fi
-  if ! timed_cp_file "$DLL_SRC" "$dest_root/extensions" "$DLL_NAME"; then
-    echo "warning: failed copying $DLL_NAME to $dest_root/extensions" >&2
+  if ! timed_cp_file "$CATALOG_DLL_SRC" "$dest_root/extensions" "$CATALOG_DLL_NAME"; then
+    echo "warning: failed copying $CATALOG_DLL_NAME to $dest_root/extensions" >&2
     return 1
+  fi
+  if [[ -n "$PLAYBACK_DLL_SRC" && -f "$PLAYBACK_DLL_SRC" ]]; then
+    if ! timed_cp_file "$PLAYBACK_DLL_SRC" "$dest_root/extensions" "$PLAYBACK_DLL_NAME"; then
+      echo "warning: failed copying $PLAYBACK_DLL_NAME to $dest_root/extensions" >&2
+      return 1
+    fi
+  else
+    echo "warning: Aura playback dll missing; Play menu will not load until rebuilt" >&2
   fi
   if [[ -f "$LAB_PACK_SRC/catalogs/instruments.json" ]]; then
     if ! timed_cp_file "$LAB_PACK_SRC/catalogs/instruments.json" "$dest_root/catalogs"; then
@@ -74,7 +83,7 @@ export_lab_pack() {
       return 1
     fi
   fi
-  echo "Wrote Lab pack under $dest_root (extensions.json + extensions/$DLL_NAME)"
+  echo "Wrote Lab pack under $dest_root (extensions.json + catalogs/playback dlls)"
   return 0
 }
 
@@ -133,20 +142,27 @@ if [[ ! -f "$SRC" ]]; then
   exit 1
 fi
 
-DLL_SRC=""
+CATALOG_DLL_SRC=""
+PLAYBACK_DLL_SRC=""
 if [[ ! -d "$ENGINE_DIR" ]]; then
-  echo "warning: aura-engine not found at $ENGINE_DIR; skipping Aura catalog dll" >&2
+  echo "warning: aura-engine not found at $ENGINE_DIR; skipping Aura pack dlls" >&2
 else
-  echo "Building aura_imp_lab_catalogs cdylib for $TARGET (release)..."
-  if (cd "$ENGINE_DIR" && cargo xwin build -p aura_imp_lab_catalogs --release --target "$TARGET"); then
-    DLL_SRC="$ENGINE_DIR/target/${TARGET}/release/${DLL_NAME}"
-    if [[ ! -f "$DLL_SRC" ]]; then
-      echo "warning: expected dll not found: $DLL_SRC" >&2
-      DLL_SRC=""
+  echo "Building aura_imp_lab_catalogs + aura_imp_lab_playback cdylibs for $TARGET (release)..."
+  if (cd "$ENGINE_DIR" && cargo xwin build -p aura_imp_lab_catalogs -p aura_imp_lab_playback --release --target "$TARGET"); then
+    CATALOG_DLL_SRC="$ENGINE_DIR/target/${TARGET}/release/${CATALOG_DLL_NAME}"
+    PLAYBACK_DLL_SRC="$ENGINE_DIR/target/${TARGET}/release/${PLAYBACK_DLL_NAME}"
+    if [[ ! -f "$CATALOG_DLL_SRC" ]]; then
+      echo "warning: expected dll not found: $CATALOG_DLL_SRC" >&2
+      CATALOG_DLL_SRC=""
+    fi
+    if [[ ! -f "$PLAYBACK_DLL_SRC" ]]; then
+      echo "warning: expected dll not found: $PLAYBACK_DLL_SRC" >&2
+      PLAYBACK_DLL_SRC=""
     fi
   else
-    echo "warning: aura_imp_lab_catalogs Windows build failed; skipping pack dll" >&2
-    DLL_SRC=""
+    echo "warning: Aura Lab pack Windows build failed; skipping pack dlls" >&2
+    CATALOG_DLL_SRC=""
+    PLAYBACK_DLL_SRC=""
   fi
 fi
 

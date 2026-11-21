@@ -166,7 +166,7 @@ container mid-session. Use `exec -T` on the running service, or a one-off
 On-demand `editor-windows` image (not started with the Dev Container). Artifacts go to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`):
 
 - **Iced:** `aura-editor.exe` plus a `demos/` copy of `aura-engine/demos/*.json`
-- **Experimental Imp Lab Tauri:** portable `imp-lab-tauri.exe` plus optional Aura Lab pack (`extensions.json`, `extensions/aura_imp_lab_catalogs.dll`, `catalogs/`). Needs **WebView2** on the Windows host (normally present via Edge). Iced `aura-editor` is deprecated; prefer this path for new editor work.
+- **Experimental Imp Lab Tauri:** portable `imp-lab-tauri.exe` plus optional Aura Lab pack (`extensions.json`, `extensions/aura_imp_lab_catalogs.dll`, `extensions/aura_imp_lab_playback.dll`, `catalogs/`). Needs **WebView2** on the Windows host (normally present via Edge). Iced `aura-editor` is deprecated; prefer this path for new editor work.
 
 The engine Dev Container includes **docker-outside-of-docker** so the Docker CLI can talk to the host daemon. After changing `devcontainer.json` features, rebuild/reopen the container.
 
