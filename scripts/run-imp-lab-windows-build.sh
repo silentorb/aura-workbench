@@ -106,6 +106,7 @@ docker run --rm \
   -v "$HOST_IMP_GRAPH_VIEW:/workspaces/aura-workbench/.mnt/imp-graph-view" \
   -v "$HOST_IMP_WORKBENCH:/workspaces/aura-workbench/.mnt/imp-workbench" \
   -v "$HOST_MIR:/workspaces/aura-workbench/.mnt/mir:ro" \
+  -v "$HOST_TOME_RUST_SERVER:/workspaces/aura-workbench/.mnt/tome-rust-server" \
   -v "$HOST_IMP_RS:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs" \
   -v "$HOST_TOME_RUST_SERVER:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/tome-rust-server" \
   -v "$HOST_IMP_SPEC:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec" \

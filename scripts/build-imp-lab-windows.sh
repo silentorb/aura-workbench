@@ -84,6 +84,30 @@ export_lab_pack() {
     fi
   fi
   echo "Wrote Lab pack under $dest_root (extensions.json + catalogs/playback dlls)"
+  export_demo_project "$dest_root" || true
+  return 0
+}
+
+# Sample Imp Lab project (a Tome data store of the Aura demos). Never overwrites an
+# existing export: the user may have edited records in it.
+export_demo_project() {
+  local dest_root="$1"
+  local src="$LAB_PACK_SRC/demo-project"
+  local dest="$dest_root/demo-project"
+
+  if [[ ! -f "$src/imp-project.json" ]]; then
+    echo "warning: demo project missing at $src (skipping)" >&2
+    return 0
+  fi
+  if io_ok test -e "$dest"; then
+    echo "Kept existing $dest (delete it to re-export the demo project)"
+    return 0
+  fi
+  if ! timeout "$COPY_TIMEOUT_SECS" cp -r "$src" "$dest"; then
+    echo "warning: failed copying demo project to $dest" >&2
+    return 1
+  fi
+  echo "Wrote demo project to $dest (File > Open Project..., pick imp-project.json)"
   return 0
 }
 
