@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Cross-compile experimental imp_lab_tauri for Windows (MSVC) and copy the
-# portable release exe to /out. Frontend is built with Bun first; assets embed via
-# tauri-build. Export I/O to flaky host mounts is time-bounded and falls back to
-# the workbench .win-out when /out cannot be written promptly.
+# Cross-compile Imp Lab for Windows (MSVC) and copy the portable release exe
+# to /out. Frontend is built with Bun first; assets embed via tauri-build.
+# Export I/O to flaky host mounts is time-bounded and falls back to the
+# workbench .win-out when /out cannot be written promptly.
 set -euo pipefail
 
 OUT_DIR=/out
 FALLBACK_OUT=/workspaces/aura-workbench/.win-out
 TARGET=x86_64-pc-windows-msvc
-EXE_NAME=imp-lab-tauri.exe
-CARGO_EXE_NAME=imp_lab_tauri.exe
+EXE_NAME=imp-lab.exe
+CARGO_EXE_NAME=imp-lab.exe
 LAB_DIR=/workspaces/aura-workbench/.mnt/imp-lab
 ENGINE_DIR=/workspaces/aura-workbench/.mnt/aura-engine
 TAURI_APP="$LAB_DIR/apps/tauri"
@@ -117,24 +117,24 @@ else
 fi
 
 if [[ ! -d "$TAURI_APP" ]]; then
-  echo "error: Tauri app not found: $TAURI_APP" >&2
+  echo "error: Imp Lab app not found: $TAURI_APP" >&2
   exit 1
 fi
 
-echo "Building Tauri frontend (Bun, TAURI_ENV_PLATFORM=windows)..."
+echo "Building Imp Lab frontend (Bun, TAURI_ENV_PLATFORM=windows)..."
 cd "$TAURI_APP"
 bun install
 TAURI_ENV_PLATFORM=windows bun run build
 
 cd "$LAB_DIR"
 
-echo "Building imp_lab_tauri for $TARGET (release, custom-protocol)..."
+echo "Building imp_lab for $TARGET (release, custom-protocol)..."
 # Bind mounts can leave mtimes/fingerprint stale across the docker-outside-of-docker
-# hop; clean the package so this export always rebuilds Tauri host sources.
+# hop; clean the package so this export always rebuilds Imp Lab host sources.
 # custom-protocol is what `tauri build` enables so the WebView serves embedded
 # frontendDist instead of build.devUrl (localhost:1420).
-cargo clean -p imp_lab_tauri --release --target "$TARGET"
-cargo xwin build -p imp_lab_tauri --release --target "$TARGET" --features custom-protocol
+cargo clean -p imp_lab --release --target "$TARGET"
+cargo xwin build -p imp_lab --release --target "$TARGET" --features custom-protocol
 
 SRC="$LAB_DIR/target/${TARGET}/release/${CARGO_EXE_NAME}"
 if [[ ! -f "$SRC" ]]; then

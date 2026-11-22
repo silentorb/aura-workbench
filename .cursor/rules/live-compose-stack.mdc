@@ -12,7 +12,7 @@ You are attached to the **engine** service of the running
 
 - `docker compose … up` / `down` / `stop` / `restart` / `kill` on this project
 - `--force-recreate`, volume renew, or any recreate of `engine` / `editor` /
-  `editor-tauri`
+  `imp-lab`
 - Recreating containers “to pick up new mounts”
 
 Do **not** probe or reproduce these hangs either.
@@ -23,7 +23,7 @@ Do **not** probe or reproduce these hangs either.
 - New mounts / `.env` path changes: ask the user to **rebuild/reopen**; do not
   recreate services
 - Verify without a suitable running service: one-off `docker run --rm` with
-  **host** bind mounts (see `scripts/run-editor-*-windows-build.sh`)
+  **host** bind mounts (see `scripts/run-*-windows-build.sh`)
 - Image changes: `docker compose … build` is OK; do not recreate live containers
   to apply mid-session
 

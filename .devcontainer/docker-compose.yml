@@ -47,9 +47,9 @@ services:
     depends_on:
       - engine
 
-  # Experimental Imp Lab Tauri+React host (Dockerfile owned by imp-lab).
-  editor-tauri:
-    image: imp-lab-tauri:local
+  # Imp Lab desktop host (Dockerfile owned by imp-lab; Bun + WebKitGTK).
+  imp-lab:
+    image: imp-lab:local
     build:
       context: ${IMP_LAB_PATH:-../../imp-lab}
       dockerfile: docker/Dockerfile

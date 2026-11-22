@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build experimental imp_lab_tauri for Windows via the editor-windows image.
+# Build Imp Lab for Windows via the editor-windows image.
 # Safe to run from the host or from the engine container (docker-outside-of-docker).
 #
 # Nested `docker compose run` would resolve bind mounts against container paths the
 # host daemon cannot see. This script builds with compose, then `docker run`s with
 # host paths derived from LOCAL_WORKSPACE_FOLDER + .devcontainer/.env.
 #
-# Writes a portable imp-lab-tauri.exe to AURA_EDITOR_WIN_OUT (same mount as Iced).
+# Writes a portable imp-lab.exe to AURA_EDITOR_WIN_OUT (same mount as Iced).
 # Requires WebView2 on the Windows host (normally present via Edge on Win10/11).
 set -euo pipefail
 
@@ -14,7 +14,7 @@ WORKSPACE_CONTAINER=/workspaces/aura-workbench
 COMPOSE_FILE_CONTAINER="$WORKSPACE_CONTAINER/.devcontainer/docker-compose.yml"
 ENV_FILE_CONTAINER="$WORKSPACE_CONTAINER/.devcontainer/.env"
 IMAGE=aura-workbench-editor-windows:local
-CONTAINER_SCRIPT=/workspaces/aura-workbench/scripts/build-editor-tauri-windows.sh
+CONTAINER_SCRIPT=/workspaces/aura-workbench/scripts/build-imp-lab-windows.sh
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "error: docker CLI not found." >&2
@@ -65,6 +65,7 @@ print(val)
 AURA_ENGINE_PATH=$(load_env AURA_ENGINE_PATH ../../aura-engine)
 AURA_EDITOR_PATH=$(load_env AURA_EDITOR_PATH ../../aura-editor)
 IMP_RS_PATH=$(load_env IMP_RS_PATH ../../imp-rs)
+TOME_RUST_SERVER_PATH=$(load_env TOME_RUST_SERVER_PATH ../../tome-rust-server)
 IMP_SPEC_PATH=$(load_env IMP_SPEC_PATH ../../imp-spec)
 IMP_LAB_PATH=$(load_env IMP_LAB_PATH ../../imp-lab)
 IMP_TS_PATH=$(load_env IMP_TS_PATH ../../imp-ts)
@@ -76,6 +77,7 @@ AURA_EDITOR_WIN_OUT=$(load_env AURA_EDITOR_WIN_OUT ../.win-out)
 HOST_ENGINE=$(host_path_from_env "$AURA_ENGINE_PATH")
 HOST_EDITOR=$(host_path_from_env "$AURA_EDITOR_PATH")
 HOST_IMP_RS=$(host_path_from_env "$IMP_RS_PATH")
+HOST_TOME_RUST_SERVER=$(host_path_from_env "$TOME_RUST_SERVER_PATH")
 HOST_IMP_SPEC=$(host_path_from_env "$IMP_SPEC_PATH")
 HOST_IMP_LAB=$(host_path_from_env "$IMP_LAB_PATH")
 HOST_IMP_TS=$(host_path_from_env "$IMP_TS_PATH")
@@ -92,7 +94,7 @@ fi
 echo "Building image $IMAGE (cargo-xwin / MSVC + Bun)..."
 docker compose -f "$COMPOSE_FILE_CONTAINER" build editor-windows
 
-echo "Running Tauri Windows cross-compile; host output -> $HOST_OUT"
+echo "Running Imp Lab Windows cross-compile; host output -> $HOST_OUT"
 docker run --rm \
   -v "$LOCAL_WORKSPACE_FOLDER:/workspaces/aura-workbench" \
   -v "$HOST_ENGINE:/workspaces/aura-workbench/.mnt/aura-engine" \
@@ -105,6 +107,7 @@ docker run --rm \
   -v "$HOST_IMP_WORKBENCH:/workspaces/aura-workbench/.mnt/imp-workbench" \
   -v "$HOST_MIR:/workspaces/aura-workbench/.mnt/mir:ro" \
   -v "$HOST_IMP_RS:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs" \
+  -v "$HOST_TOME_RUST_SERVER:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/tome-rust-server" \
   -v "$HOST_IMP_SPEC:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec" \
   -v "$HOST_OUT:/out" \
   -w /workspaces/aura-workbench/.mnt/imp-lab \
@@ -115,8 +118,8 @@ echo "Export host path: $HOST_OUT"
 # Verifying a flaky host mount (e.g. /mnt/e) can hang; bound the whole check.
 VERIFY_TIMEOUT_SECS="${AURA_EDITOR_WIN_VERIFY_TIMEOUT_SECS:-30}"
 if ! timeout "$VERIFY_TIMEOUT_SECS" docker run --rm -v "$HOST_OUT:/out:ro" alpine \
-  ls -l --full-time /out/imp-lab-tauri.exe; then
-  echo "warning: could not list $HOST_OUT/imp-lab-tauri.exe within ${VERIFY_TIMEOUT_SECS}s" >&2
+  ls -l --full-time /out/imp-lab.exe; then
+  echo "warning: could not list $HOST_OUT/imp-lab.exe within ${VERIFY_TIMEOUT_SECS}s" >&2
   echo "warning: build may still have written a fallback under the workbench .win-out" >&2
   echo "Check AURA_EDITOR_WIN_OUT in .devcontainer/.env" >&2
 fi

@@ -20,7 +20,7 @@ RUN rustup target add x86_64-pc-windows-msvc \
  && cargo install --locked cargo-xwin \
  && cargo xwin cache xwin
 
-# Bun for experimental Imp Lab Tauri frontend builds (same version as imp-lab/docker/Dockerfile).
+# Bun for Imp Lab frontend builds (same version as imp-lab/docker/Dockerfile).
 ARG BUN_VERSION=1.2.19
 ENV BUN_INSTALL=/home/vscode/.bun
 ENV PATH="${BUN_INSTALL}/bin:${PATH}"
