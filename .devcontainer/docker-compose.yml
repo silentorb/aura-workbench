@@ -14,8 +14,10 @@ x-mnt-volumes: &mnt-volumes
   # Temporary: Imp workbench sibling (remove when no longer needed).
   - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
   - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
+  - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/tome-rust-server
   # Cargo path deps in aura-engine resolve `.mnt/imp-*` relative to the engine root.
   - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
+  - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/tome-rust-server
   - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
 
 services:
@@ -83,7 +85,9 @@ services:
       - ${IMP_GRAPH_VIEW_PATH:-../../imp-graph-view}:/workspaces/aura-workbench/.mnt/imp-graph-view
       - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
       - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
+      - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/tome-rust-server
       - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
+      - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/tome-rust-server
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
       - ${AURA_EDITOR_WIN_OUT:-../.win-out}:/out
     working_dir: /workspaces/aura-workbench/.mnt/aura-editor

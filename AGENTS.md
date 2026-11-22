@@ -31,8 +31,9 @@ Expected container paths when attached to the **engine** service (`workspaceFold
 | `.mnt/imp-graph-view` | `imp-graph-view` (Imp ↔ React Flow converters) |
 | `.mnt/imp-workbench` | `imp-workbench` (temporary) |
 | `.mnt/mir` | `mir` (read-only) |
+| `.mnt/tome-rust-server` | `tome-rust-server` (hosts the `imp_mir` crate) |
 
-Imp is also bind-mounted at `.mnt/aura-engine/.mnt/imp-*` so Cargo path deps inside the engine tree keep working.
+Imp and tome-rust-server are also bind-mounted at `.mnt/aura-engine/.mnt/imp-*` and `.mnt/aura-engine/.mnt/tome-rust-server` so Cargo path deps inside the engine tree keep working.
 
 Each mounted repo may have its own `AGENTS.md` and `docs/`. Prefer the nearest `AGENTS.md` and that repo’s `docs/` when working in a given tree.
 
@@ -53,6 +54,7 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | `.mnt/aura-engine` | `cargo test` and `cargo clippy` from that repo |
 | `.mnt/aura-editor` | Iced: `cargo test` / `cargo clippy` (editor service) |
 | `.mnt/imp-rs` | see that repo’s `AGENTS.md` |
+| `.mnt/tome-rust-server` | see that repo’s `AGENTS.md` (`imp_mir` changes: also `cargo test` in aura-engine) |
 | `.mnt/imp-spec` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-lab` | Iced crates: `cargo test` / `cargo clippy -- -D warnings`. Experimental Tauri: in **editor-tauri**, `cd apps/tauri && bun run build` and `cargo check -p imp_lab_tauri` |
 | `.mnt/imp-ts` | see that repo’s `AGENTS.md` |
