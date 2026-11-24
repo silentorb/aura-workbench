@@ -24,8 +24,8 @@ todos:
     content: "Phase 2: plugin parameters as embedded node data (params literal: CLAP param id → plain value), applied after state at frame 0; ProcessorFactory::params; aura plugin-params listing; fixture param"
     status: completed
   - id: phase3-realtime
-    content: "Phase 3: render-ahead worker for deterministic transport playback"
-    status: pending
+    content: "Phase 3: Sampler::prepare hook; RenderCache lock-free chunked output + render-ahead worker; real-time reader thread tag (silence + underrun count on miss); translator wraps roots with plugin caches; PlaybackEngine prepares before opening the stream"
+    status: completed
   - id: phase4-lab-ux
     content: "Phase 4 (imp-lab + lab-pack): plugin browser, plugin GUI window, state capture on edit"
     status: pending
@@ -210,9 +210,14 @@ User decision: keep it simple. Support soft synths with their parameters as embe
 - Fixture: `aura.fixture.sine` gains a `level` parameter (id 0, 0–1, default 0.25).
 - Deferred (not in Phase 2): parameter ports and signal automation, per-note parameters (`NoteParams` → per-note modulation), generated per-plugin node types.
 
-### Phase 3 outline
+### Phase 3 (render-ahead for transport playback)
 
-- `aura_render`: an optional `Prepare` trait on samplers (or a side channel from translation) with `prepare(start_secs, ahead_secs)` and `spawn_render_ahead()`. `PlaybackEngine::start_at` calls it before opening the stream. Audio-thread reads use `try_lock`, outputting silence and counting an underrun on miss.
+- `aura_render`: `Sampler::prepare(start_secs, ahead_secs)` (default no-op) and `Sampler::underruns()` (default 0). A thread-local real-time reader tag: `mark_realtime_reader()` / `is_realtime_reader()`.
+- `aura_io_cpal::PlaybackEngine::start_at` calls `prepare(start, PREPARE_AHEAD_SECS)` on the calling (control) thread before opening the device; its audio callback marks itself a real-time reader. `StreamingOutput` does not (streaming voices render inline, as before).
+- `RenderCache`: output in append-only chunks of atomics (`len` published with release/acquire), so reads never wait on rendering. The plugin and its event state stay behind a mutex used only by renderers. `at(t)` from a real-time reader returns silence for an unrendered frame and counts an underrun; any other reader renders inline as before (offline export, chained plugins, streaming voices). `prepare` renders synchronously to `start + ahead`, then starts one worker thread (per cache, once) that keeps `ahead` past the furthest real-time read; the worker holds a weak reference and exits when the cache is dropped or finished.
+- Translator: plugin caches are shared (`Arc`); translation collects them, and a graph with any wraps its root in a sampler whose `prepare`/`underruns` reach every cache. Other samplers are untouched.
+- Deterministic output is unchanged: the same frames render in the same order whichever thread renders them.
+- Not in scope: reusing renders across plays, Lab 'preparing' UI (a play request just takes longer to return), choosing real-time render mode for transport.
 
 ### Phase 4 outline (imp-lab + lab-pack)
 
@@ -254,6 +259,10 @@ User decision: keep it simple. Support soft synths with their parameters as embe
 #### Phase 2 commits
 - aura-engine (baseline clean at `8cd166d`): `crates/aura_plugin_host/src/lib.rs`, `crates/aura_clap/{Cargo.toml,src/host.rs,src/lib.rs,src/processor.rs,src/tests.rs}`, `crates/aura_clap_fixture/{Cargo.toml,src/lib.rs}`, `crates/aura_imp/src/plugin.rs`, `crates/aura_integration/src/translate/{mod.rs,plugin.rs}`, `crates/aura_cli/{Cargo.toml,src/main.rs}`, `Cargo.lock`, `demos/demo-03-plugin.json`, docs (`design/plugin-hosting.md`, `scoping/plugin-hosting.md`, `crates/{aura_plugin_host,aura_clap,aura_imp,aura_cli}/design/overview.md`), `lab-pack/README.md`. Draft message: "Configure plugins entirely from embedded node data: parameter values in plain units applied over the saved state from the first frame, with a CLI listing of plugin parameters, and no plugin-specific ports."
 - aura-workbench: this plan file. Draft message: "Record the Phase 2 decision to configure plugins by embedded node data instead of parameter ports."
+
+#### Phase 3 commits
+- aura-engine (baseline clean at `d5a5c5e`): `crates/aura_render/src/lib.rs`, `crates/aura_io_cpal/src/lib.rs`, `crates/aura_plugin_host/src/cache.rs`, `crates/aura_integration/src/translate/{mod.rs,plugin.rs,streaming.rs}`, docs (`design/{plugin-hosting,architecture}.md`, `scoping/plugin-hosting.md`, `crates/{aura_render,aura_io_cpal,aura_plugin_host}/design/overview.md`). Draft message: "Render plugins ahead of transport playback so the audio thread only reads: samplers prepare before the device opens, a background worker keeps two seconds ahead, and real-time reads of anything unrendered are silent and counted instead of blocking."
+- aura-workbench: this plan file. Draft message: "Record Phase 3 of CLAP hosting: render-ahead for transport playback."
 
 ### User trigger
 
