@@ -27,8 +27,8 @@ todos:
     content: "Phase 3: Sampler::prepare hook; RenderCache lock-free chunked output + render-ahead worker; real-time reader thread tag (silence + underrun count on miss); translator wraps roots with plugin caches; PlaybackEngine prepares before opening the stream"
     status: completed
   - id: phase4-lab-ux
-    content: "Phase 4 (imp-lab + lab-pack): plugin browser, plugin GUI window, state capture on edit"
-    status: pending
+    content: "Phase 4: imp-lab generic kinds (node-literal-options, node-action, node edits topic); aura_clap plugin GUI sessions (floating + embedded window on a winit main thread), state capture on mark_dirty; Lab pack plugin list topics, Open plugin GUI action, debounced state edits"
+    status: completed
   - id: verify-full-suites
     content: "Full-suite verification — After implementation, run full verify for every plan-affected repo and its direct dependents (see the project's verify matrix, typically AGENTS.md). Fix failures or get an explicit user waiver before await-commit. Reason about CI; never defer suite confidence to a future CI run."
     status: completed
@@ -219,10 +219,27 @@ User decision: keep it simple. Support soft synths with their parameters as embe
 - Deterministic output is unchanged: the same frames render in the same order whichever thread renders them.
 - Not in scope: reusing renders across plays, Lab 'preparing' UI (a play request just takes longer to return), choosing real-time render mode for transport.
 
-### Phase 4 outline (imp-lab + lab-pack)
+### Phase 4 (Imp Lab plugin UX)
 
-- Lab extension requests: `plugins.list`, `plugins.open_gui { node }`, and a topic `plugins.state_changed { node, blob }` that the Lab writes into the node's state literal as one undo step.
-- Run the Windows export (`windows-editor-build` todo).
+User decisions: generic declared Lab kinds (Lab stays protocol-agnostic); GUI edits reach the graph live, merged into one undo step per GUI session; the sound changes on the next note / next Play (the GUI edits its own instance).
+
+**imp-lab (generic, no Aura or CLAP knowledge)** in `imp_lab_extensions` + the Tauri app:
+- `node-literal-options`: `params { nodeType, port, optionsTopic }`. Properties draws that literal as a searchable dropdown of the topic's `[{value, label}]` (an unknown current value stays listed).
+- `node-action`: `label`; `params { nodeType, serviceId, action, editsTopic?, order }`. Properties shows a button for nodes of that type; clicking sends `service_request {type: "node_action", action, node: {id, type, inputs}}`; an error reply (`{error}`) shows inline.
+- Node edits: an action's `editsTopic` carries `{seq, session, node, inputs}`; Lab applies each new `seq` to the open graph holding `node` (`null` removes a literal), coalescing one `session` into one undo step.
+- Tauri `get_node_ui` returns the declarations; tests for parsing and edit application.
+
+**aura_clap**
+- Plugin GUI sessions (`ClapHost::open_editor`): instantiate on the CLAP main thread with the node's settings, prefer embedding in a host window (winit, created on the CLAP main thread), else the plugin's floating window. Host `gui` (resize / closed) and `state` (`mark_dirty`) extensions. On `mark_dirty`, save state (debounced 300 ms) and call the session's listener; final save when the window closes.
+- The CLAP main thread runs a winit event loop when a display is available (`with_any_thread`; pumps Win32 messages) and the current headless loop otherwise. Embedding needs the winit loop; floating works either way.
+- Fixture: `aura.fixture.gain` gains a floating fake GUI and a test hook that simulates a GUI edit (set gain + `mark_dirty`).
+
+**aura_imp_lab_playback + lab-pack**
+- Publishes `aura.plugins.instruments` / `aura.plugins.effects` options (scanned off the startup path).
+- Answers `node_action` `plugin.open_gui`; publishes `aura.plugins.edits` with `inputs {state: base64, params: null}` (state now holds every parameter).
+- `extensions.json`: two `node-literal-options` rows (instrument and effect `plugin`) and two `node-action` rows (Open plugin GUI).
+
+**Verification limits:** headless tests cover the floating path and state capture; embedded windows and real plugin GUIs are verified on the Windows export only.
 
 ### Verification
 
@@ -263,6 +280,11 @@ User decision: keep it simple. Support soft synths with their parameters as embe
 #### Phase 3 commits
 - aura-engine (baseline clean at `d5a5c5e`): `crates/aura_render/src/lib.rs`, `crates/aura_io_cpal/src/lib.rs`, `crates/aura_plugin_host/src/cache.rs`, `crates/aura_integration/src/translate/{mod.rs,plugin.rs,streaming.rs}`, docs (`design/{plugin-hosting,architecture}.md`, `scoping/plugin-hosting.md`, `crates/{aura_render,aura_io_cpal,aura_plugin_host}/design/overview.md`). Draft message: "Render plugins ahead of transport playback so the audio thread only reads: samplers prepare before the device opens, a background worker keeps two seconds ahead, and real-time reads of anything unrendered are silent and counted instead of blocking."
 - aura-workbench: this plan file. Draft message: "Record Phase 3 of CLAP hosting: render-ahead for transport playback."
+
+#### Phase 4 commits
+- imp-lab (baseline clean at `624b1bb`): `crates/imp_lab_extensions/src/{config.rs,settings.rs,lib.rs,node_ui.rs}`, `apps/tauri/src-tauri/src/{extensions.rs,lib.rs}`, `apps/tauri/src/{App.tsx,nodeUi.ts,nodeUi.test.ts,NodeUiControls.tsx}`, `apps/tauri/package.json`, `docs/features/extensions.md`, `AGENTS.md`. Draft message: "Let extensions give node types UI in Properties: literal dropdowns fed by topics, action buttons that send a service request, and service edits of node literals applied as one undo step per session."
+- aura-engine (baseline clean at `9f70957`): `crates/aura_clap/` (`Cargo.toml`, `src/{lib.rs,host.rs,main_thread.rs,windowing.rs,editor.rs,processor.rs,tests.rs}`), `crates/aura_clap_fixture/{Cargo.toml,src/lib.rs}`, `crates/aura_plugin_host/src/lib.rs`, `crates/aura_integration/src/{lib.rs,translate/mod.rs,translate/plugin.rs}`, `crates/aura_imp_lab_playback/{Cargo.toml,src/lib.rs,src/plugins.rs}`, `lab-pack/{extensions.json,README.md}`, `Cargo.toml`, `Cargo.lock`, docs (`design/plugin-hosting.md`, `scoping/plugin-hosting.md`, `crates/aura_clap/design/overview.md`). Draft message: "Choose and edit plugins in Imp Lab: installed plugins as node dropdowns, and each plugin's own GUI opened from Properties on the CLAP main thread's window loop, with its edits saved into the node's state."
+- aura-workbench: this plan file. Draft message: "Record Phase 4 of CLAP hosting: plugin choice and GUI editing in Imp Lab."
 
 ### User trigger
 
