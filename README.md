@@ -6,7 +6,7 @@ Primary development workspace for Aura. Opens as a Dev Container that starts Com
 - **editor** — derives from the engine image, adds Linux GUI deps for **Iced**; editor build/test/run only (not engine tests)
 - **imp-lab** — Imp Lab desktop host (Bun + WebKitGTK); Dockerfile owned by **imp-lab** (`docker/Dockerfile`)
 
-An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`cargo-xwin`, plus Bun for Imp Lab): Iced `aura-editor.exe` and portable `imp-lab.exe`. It is not started with the Dev Container.
+An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`cargo-xwin` plus Bun): portable `imp-lab.exe` with the Aura Lab pack. It is not started with the Dev Container.
 
 ## Host layout
 
@@ -90,11 +90,9 @@ docker compose -f .devcontainer/docker-compose.yml build imp-lab
 
 Set `AURA_EDITOR_WIN_OUT` in `.devcontainer/.env` to a host directory for output `.exe` files
 (default `../.win-out`). Point it at a Windows-visible path (e.g. `/mnt/d/AuraEditor`) to run
-binaries from Windows Explorer. Both Iced and Imp Lab exports share this mount.
+binaries from Windows Explorer.
 
-- **Iced** (`run-editor-windows-build.sh` / task **Build editor (Windows)**): `aura-editor.exe`
-  plus engine demo graphs (`aura-engine/demos/*.json`, including `instruments.json`) under `demos/`.
-- **Imp Lab** (`run-imp-lab-windows-build.sh` / task **Build Imp Lab (Windows)**; preferred over deprecated Iced `aura-editor`):
+- **Imp Lab** (`run-imp-lab-windows-build.sh` / task **Build Imp Lab (Windows)**):
   portable `imp-lab.exe` plus Aura Lab pack (`extensions.json`, catalog `.dll`, `catalogs/`).
   The Windows host needs **WebView2** (normally present via Edge on Win10/11).
 
@@ -103,11 +101,10 @@ Export I/O is time-bounded: if the configured mount is flaky or locked (common w
 instead of hanging; the release build itself is still considered successful.
 
 The engine container uses **docker-outside-of-docker** so this works from the attached Dev Container
-(rebuild/reopen after feature changes). Prefer the wrappers (or the build tasks) over raw
+(rebuild/reopen after feature changes). Prefer the wrapper (or the build task) over raw
 `docker compose run`, which would bind-mount container paths the host daemon cannot see:
 
 ```bash
-bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh
 bash /workspaces/aura-workbench/scripts/run-imp-lab-windows-build.sh
 ```
 
@@ -118,7 +115,7 @@ See [`AGENTS.md`](./AGENTS.md). Planning and publishing skills come from silento
 ## Paths
 
 Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling repos (`../../aura-engine`, etc.).
-`AURA_EDITOR_WIN_OUT` controls where Windows exports land (`aura-editor.exe` + `demos/`, and/or `imp-lab.exe`).
+`AURA_EDITOR_WIN_OUT` controls where Windows exports land (`imp-lab.exe` and the Lab pack).
 
 ## Repos
 

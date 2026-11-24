@@ -11,7 +11,7 @@
 | `engine` | Cursor attach target. Engine build, clippy, and **engine test suite**. Lean Rust + ALSA image. Includes docker-outside-of-docker for host Docker CLI access. |
 | `editor` | Editor build, test, and run only (Rust + Iced GUI system deps). Derived from the engine image. **Not** for running engine tests. |
 | `imp-lab` | Imp Lab desktop host (Bun + WebKitGTK). Image Dockerfile is owned by **imp-lab** (`docker/Dockerfile`); Compose only wires the build. Derived from the engine image. **Not** for Iced or engine tests. |
-| `editor-windows` | On-demand Windows MSVC cross-compile (`cargo-xwin` + Bun). Builds Iced `aura-editor.exe` and portable `imp-lab.exe` into `AURA_EDITOR_WIN_OUT`. Derived from the engine image. **Not** in `runServices`. |
+| `editor-windows` | On-demand Windows MSVC cross-compile (`cargo-xwin` + Bun). Builds portable `imp-lab.exe` and the Aura Lab pack into `AURA_EDITOR_WIN_OUT`. Derived from the engine image. **Not** in `runServices`. |
 
 If the engine image later accumulates substantial deps the editor does not need, extract a shared base image instead of deriving editor from engine.
 
@@ -62,7 +62,7 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | `.mnt/imp-workbench` | see that repo’s `AGENTS.md` |
 | `.mnt/mir` | none — read-only mount |
 
-When a plan touches `aura-editor`, Imp Lab’s desktop app, or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-editor-windows-build.sh`, `scripts/build-editor-windows.sh`, `scripts/run-imp-lab-windows-build.sh`, `scripts/build-imp-lab-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run the affected wrapper (`run-editor-windows-build.sh` and/or `run-imp-lab-windows-build.sh`), report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
+When a plan touches `aura-editor`, Imp Lab’s desktop app, or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-imp-lab-windows-build.sh`, `scripts/build-imp-lab-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run `run-imp-lab-windows-build.sh`, report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
 
 ## Cross-repo Rust agent docs
 
@@ -165,19 +165,17 @@ container mid-session. Use `exec -T` on the running service, or a one-off
 
 On-demand `editor-windows` image (not started with the Dev Container). Artifacts go to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`):
 
-- **Iced:** `aura-editor.exe` plus a `demos/` copy of `aura-engine/demos/*.json`
-- **Imp Lab:** portable `imp-lab.exe` plus optional Aura Lab pack (`extensions.json`, `extensions/aura_imp_lab_catalogs.dll`, `extensions/aura_imp_lab_playback.dll`, `catalogs/`). Needs **WebView2** on the Windows host (normally present via Edge). Iced `aura-editor` is deprecated; prefer this path for new editor work.
+- **Imp Lab:** portable `imp-lab.exe` plus optional Aura Lab pack (`extensions.json`, `extensions/aura_imp_lab_catalogs.dll`, `extensions/aura_imp_lab_playback.dll`, `catalogs/`). Needs **WebView2** on the Windows host (normally present via Edge). The deprecated Iced `aura-editor` is no longer exported for Windows.
 
 The engine Dev Container includes **docker-outside-of-docker** so the Docker CLI can talk to the host daemon. After changing `devcontainer.json` features, rebuild/reopen the container.
 
-From the attached engine context (or the VS Code / Cursor tasks **Build editor (Windows)** / **Build Imp Lab (Windows)**):
+From the attached engine context (or the VS Code / Cursor task **Build Imp Lab (Windows)**):
 
 ```bash
-bash /workspaces/aura-workbench/scripts/run-editor-windows-build.sh
 bash /workspaces/aura-workbench/scripts/run-imp-lab-windows-build.sh
 ```
 
-Those wrappers build `editor-windows` and run the cross-compile with host bind mounts (nested `docker compose run` would pass container paths the host daemon cannot mount).
+That wrapper builds `editor-windows` and runs the cross-compile with host bind mounts (nested `docker compose run` would pass container paths the host daemon cannot mount).
 
 ## Image rebuild
 
