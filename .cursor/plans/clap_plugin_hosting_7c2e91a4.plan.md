@@ -21,8 +21,8 @@ todos:
     content: "Phase 1: streaming PluginStage — StreamingProgram splits voice graphs at plugin nodes; shared instance fed by VoiceCommands; effects on the voice mix; per-voice fallback for plugin output feeding per-note nodes; audition/MIDI through plugins"
     status: completed
   - id: phase2-params
-    content: "Phase 2: per-plugin generated node types with param ports, control-rate automation, per-note param modulation from NoteParams, state blob persistence"
-    status: pending
+    content: "Phase 2: plugin parameters as embedded node data (params literal: CLAP param id → plain value), applied after state at frame 0; ProcessorFactory::params; aura plugin-params listing; fixture param"
+    status: completed
   - id: phase3-realtime
     content: "Phase 3: render-ahead worker for deterministic transport playback"
     status: pending
@@ -198,12 +198,17 @@ Phase 1 is specified in full. Later phases are outlined here and get their own d
 - `demos/demo-03-plugin.json`: arpeggio into `plugin_instrument` (fixture sine) into `plugin_effect` (fixture gain). Add it to `render-all.sh` only if it can locate the fixture build. Otherwise keep it as a test fixture graph.
 - Integration tests: render the demo graph twice and get bit-identical output. Sparse `at(t)` equals the sequential pass. Note onsets land on exact frames (± latency compensation verified against the fixture's 64 frames).
 
-### Phase 2 outline
+### Phase 2 (as decided at start: parameters are embedded node data, not ports)
 
-- Generated node types: `aura_imp::plugin::node_library_for(descriptors, param_infos)` produces an Imp `NodeLibrary` `aura.plugin.<sanitized-id>` with one optional `signal` input per param (`id`, name, range in port metadata). Generation runs at scan time; results are cached on disk keyed by bundle path + mtime.
-- Automation: sample a wired param signal every 64 frames and emit `Param` events on change.
-- Per-note params: a node literal maps `NoteParams` keys to plugin param ids, and the values are emitted as `ParamMod { note_id }` at note-on.
-- State: node asset storage for blobs (check Imp's asset/blob support; otherwise a base64 literal).
+User decision: keep it simple. Support soft synths with their parameters as embedded node data; plugin nodes keep only generic inputs (`score`, `audio`), nothing plugin-specific. Wired parameter values, when they come, are **plain values** (the plugin's own units, clamped to range).
+
+- `plugin_instrument` / `plugin_effect` gain a `params` literal: a JSON object string mapping CLAP parameter id (decimal) to plain value, e.g. `{"0": 0.4}`. Empty means none.
+- Applied after the stored `state`: values override it. Delivered as parameter-value events at frame 0 of the first processed block (every plugin must handle those). Values are clamped to the parameter's range. Unknown or read-only ids fail translation with the node and id.
+- Seam: `PluginResolver::resolve(id, &PluginSettings { state, params })`; `ProcessorFactory::params()` returns `ParamDescription`s (id, name, module, min, max, default, flags).
+- CLAP: params extension on the host side (info, validation, `ParamValueEvent`s); host declares a no-op `HostParams` for compatibility.
+- CLI: `aura plugin-params <plugin-id> [--plugin-path PATH]...` lists a plugin's parameters (id, name, module, range, default, flags), so ids can be authored.
+- Fixture: `aura.fixture.sine` gains a `level` parameter (id 0, 0–1, default 0.25).
+- Deferred (not in Phase 2): parameter ports and signal automation, per-note parameters (`NoteParams` → per-note modulation), generated per-plugin node types.
 
 ### Phase 3 outline
 
@@ -245,6 +250,10 @@ Phase 1 is specified in full. Later phases are outlined here and get their own d
 
 - Include: plugin browser / GUI / state capture changes.
 - Draft message: TBD at phase 4.
+
+#### Phase 2 commits
+- aura-engine (baseline clean at `8cd166d`): `crates/aura_plugin_host/src/lib.rs`, `crates/aura_clap/{Cargo.toml,src/host.rs,src/lib.rs,src/processor.rs,src/tests.rs}`, `crates/aura_clap_fixture/{Cargo.toml,src/lib.rs}`, `crates/aura_imp/src/plugin.rs`, `crates/aura_integration/src/translate/{mod.rs,plugin.rs}`, `crates/aura_cli/{Cargo.toml,src/main.rs}`, `Cargo.lock`, `demos/demo-03-plugin.json`, docs (`design/plugin-hosting.md`, `scoping/plugin-hosting.md`, `crates/{aura_plugin_host,aura_clap,aura_imp,aura_cli}/design/overview.md`), `lab-pack/README.md`. Draft message: "Configure plugins entirely from embedded node data: parameter values in plain units applied over the saved state from the first frame, with a CLI listing of plugin parameters, and no plugin-specific ports."
+- aura-workbench: this plan file. Draft message: "Record the Phase 2 decision to configure plugins by embedded node data instead of parameter ports."
 
 ### User trigger
 
