@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Cross-compile Imp Lab for Windows (MSVC) and copy the portable release exe
+# Cross-compile Imp Lab for Windows (MSVC) and copy the portable release exe plus the
+# Aura pack (aura-editor configuration + UI library, aura-engine dlls and data)
 # to /out. Frontend is built with Bun first; assets embed via tauri-build.
 # Export I/O to flaky host mounts is time-bounded and falls back to the
 # workbench .win-out when /out cannot be written promptly.
@@ -13,7 +14,11 @@ CARGO_EXE_NAME=imp-lab.exe
 LAB_DIR=/workspaces/aura-workbench/.mnt/imp-lab
 ENGINE_DIR=/workspaces/aura-workbench/.mnt/aura-engine
 TAURI_APP="$LAB_DIR/apps/tauri"
+EDITOR_DIR=/workspaces/aura-workbench/.mnt/aura-editor
+# Aura pack: configuration from aura-editor; extension libraries and data from aura-engine.
+PACK_CONFIG_SRC="$EDITOR_DIR/pack/extensions.json"
 LAB_PACK_SRC="$ENGINE_DIR/lab-pack"
+EDITOR_UI_NAME=aura_editor.js
 CATALOG_DLL_NAME=aura_imp_lab_catalogs.dll
 PLAYBACK_DLL_NAME=aura_imp_lab_playback.dll
 # Bound flaky 9p/drvfs I/O so a wedged mount cannot hang the whole export.
@@ -48,8 +53,8 @@ describe_file() {
 export_lab_pack() {
   local dest_root="$1"
 
-  if [[ ! -f "$LAB_PACK_SRC/extensions.json" ]]; then
-    echo "warning: Lab pack missing at $LAB_PACK_SRC (skipping extensions sidecar)" >&2
+  if [[ ! -f "$PACK_CONFIG_SRC" ]]; then
+    echo "warning: Aura pack config missing at $PACK_CONFIG_SRC (skipping extensions sidecar)" >&2
     return 0
   fi
   if [[ ! -f "$CATALOG_DLL_SRC" ]]; then
@@ -57,7 +62,7 @@ export_lab_pack() {
     return 0
   fi
 
-  if ! timed_cp_file "$LAB_PACK_SRC/extensions.json" "$dest_root"; then
+  if ! timed_cp_file "$PACK_CONFIG_SRC" "$dest_root"; then
     echo "warning: failed copying extensions.json to $dest_root" >&2
     return 1
   fi
@@ -83,7 +88,15 @@ export_lab_pack() {
       return 1
     fi
   fi
-  echo "Wrote Lab pack under $dest_root (extensions.json + catalogs/playback dlls)"
+  if [[ -n "$EDITOR_UI_SRC" && -f "$EDITOR_UI_SRC" ]]; then
+    if ! timed_cp_file "$EDITOR_UI_SRC" "$dest_root/extensions" "$EDITOR_UI_NAME"; then
+      echo "warning: failed copying $EDITOR_UI_NAME to $dest_root/extensions" >&2
+      return 1
+    fi
+  else
+    echo "warning: aura-editor UI library missing; the notation editor will not load until rebuilt" >&2
+  fi
+  echo "Wrote Aura pack under $dest_root (extensions.json + catalogs/playback dlls + aura-editor UI)"
   export_demo_project "$dest_root" || true
   return 0
 }
@@ -187,6 +200,18 @@ else
     echo "warning: Aura Lab pack Windows build failed; skipping pack dlls" >&2
     CATALOG_DLL_SRC=""
     PLAYBACK_DLL_SRC=""
+  fi
+fi
+
+EDITOR_UI_SRC=""
+if [[ ! -d "$EDITOR_DIR" ]]; then
+  echo "warning: aura-editor not found at $EDITOR_DIR; skipping the aura-editor UI library" >&2
+else
+  echo "Building the aura-editor UI library (Bun)..."
+  if (cd "$EDITOR_DIR" && bun install && bun run build); then
+    EDITOR_UI_SRC="$EDITOR_DIR/dist/$EDITOR_UI_NAME"
+  else
+    echo "warning: aura-editor UI library build failed; skipping it" >&2
   fi
 fi
 

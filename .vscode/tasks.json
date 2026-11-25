@@ -21,16 +21,17 @@
         "showReuseMessage": true,
         "clear": false
       },
-      "detail": "Cross-compile portable imp-lab.exe via editor-windows (cargo-xwin + Bun) into AURA_EDITOR_WIN_OUT (/out). Needs WebView2 on Windows. Requires Dev Container rebuild for docker-outside-of-docker."
+      "detail": "Cross-compile portable imp-lab.exe plus the Aura pack (aura-editor config + UI library, aura-engine dlls) via editor-windows (cargo-xwin + Bun) into AURA_EDITOR_WIN_OUT (/out). Needs WebView2 on Windows. Requires Dev Container rebuild for docker-outside-of-docker."
     },
     {
-      "label": "Clean editor target if large",
+      "label": "Assemble Aura pack (Linux)",
       "type": "shell",
-      "command": "bash \"${workspaceFolder}/scripts/clean-editor-target-if-large.sh\"",
+      "command": "docker compose -f \"${workspaceFolder}/.devcontainer/docker-compose.yml\" exec -T imp-lab bash -lc 'bash /workspaces/aura-workbench/scripts/assemble-aura-pack.sh'",
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "problemMatcher": [],
+      "group": "build",
+      "problemMatcher": ["$rustc"],
       "presentation": {
         "reveal": "always",
         "panel": "shared",
@@ -39,8 +40,7 @@
         "showReuseMessage": true,
         "clear": false
       },
-      "detail": "If .mnt/aura-editor/target exceeds AURA_EDITOR_TARGET_MAX_GIB (default 8 GiB), run cargo clean. Oversized debug target/ is a defect."
+      "detail": "Build the aura-engine pack cdylibs and the aura-editor UI library in the imp-lab service and assemble the Aura pack into .aura-pack/ (run Imp Lab with IMP_LAB_EXTENSIONS=/workspaces/aura-workbench/.aura-pack/extensions.json)."
     }
   ]
 }
-

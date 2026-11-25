@@ -6,7 +6,7 @@
 # host daemon cannot see. This script builds with compose, then `docker run`s with
 # host paths derived from LOCAL_WORKSPACE_FOLDER + .devcontainer/.env.
 #
-# Writes a portable imp-lab.exe to AURA_EDITOR_WIN_OUT (same mount as Iced).
+# Writes a portable imp-lab.exe plus the Aura pack to AURA_EDITOR_WIN_OUT.
 # Requires WebView2 on the Windows host (normally present via Edge on Win10/11).
 set -euo pipefail
 

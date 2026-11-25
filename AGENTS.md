@@ -9,11 +9,12 @@
 | Service | Role |
 |---------|------|
 | `engine` | Cursor attach target. Engine build, clippy, and **engine test suite**. Lean Rust + ALSA image. Includes docker-outside-of-docker for host Docker CLI access. |
-| `editor` | Editor build, test, and run only (Rust + Iced GUI system deps). Derived from the engine image. **Not** for running engine tests. |
-| `imp-lab` | Imp Lab desktop host (Bun + WebKitGTK). Image Dockerfile is owned by **imp-lab** (`docker/Dockerfile`); Compose only wires the build. Derived from the engine image. **Not** for Iced or engine tests. |
-| `editor-windows` | On-demand Windows MSVC cross-compile (`cargo-xwin` + Bun). Builds portable `imp-lab.exe` and the Aura Lab pack into `AURA_EDITOR_WIN_OUT`. Derived from the engine image. **Not** in `runServices`. |
+| `imp-lab` | Imp Lab desktop host (Bun + WebKitGTK), plus **aura-editor** build/test (Bun) and Aura pack assembly. Image Dockerfile is owned by **imp-lab** (`docker/Dockerfile`); Compose only wires the build. Derived from the engine image. **Not** for engine tests. |
+| `editor-windows` | On-demand Windows MSVC cross-compile (`cargo-xwin` + Bun). Builds portable `imp-lab.exe` and the Aura pack into `AURA_EDITOR_WIN_OUT`. Derived from the engine image. **Not** in `runServices`. |
 
-If the engine image later accumulates substantial deps the editor does not need, extract a shared base image instead of deriving editor from engine.
+Aura's editor UI is **aura-editor**: Imp Lab extensions (a UI library) plus the Aura pack configuration, run inside Imp Lab. There is no separate editor application or editor service. Imp Lab stays domain-neutral; audio-specific UI goes in aura-editor.
+
+If the engine image later accumulates substantial deps the imp-lab image does not need, extract a shared base image instead of deriving imp-lab from engine.
 
 ## Mounted repositories
 
@@ -52,23 +53,23 @@ Silentorb agent skill packages are baked into the engine image under `/opt/silen
 | --- | --- |
 | workbench (this repo) | none — tooling/docs only; rebuild compose images when Dockerfiles change |
 | `.mnt/aura-engine` | `cargo test` and `cargo clippy` from that repo |
-| `.mnt/aura-editor` | Iced: `cargo test` / `cargo clippy` (editor service) |
+| `.mnt/aura-editor` | `bun run test` and `bun run build` from that repo (run in **imp-lab**; needs sibling `imp-lab`) |
 | `.mnt/imp-rs` | see that repo’s `AGENTS.md` |
 | `.mnt/tome-rust-server` | see that repo’s `AGENTS.md` (`imp_mir` changes: also `cargo test` in aura-engine) |
 | `.mnt/imp-spec` | see that repo’s `AGENTS.md` |
-| `.mnt/imp-lab` | Library crates: `cargo test` / `cargo clippy -- -D warnings`. Desktop app: in **imp-lab**, `cd apps/tauri && bun run build` and `cargo check -p imp_lab` |
+| `.mnt/imp-lab` | Library crates: `cargo test` / `cargo clippy -- -D warnings`. Desktop app: in **imp-lab**, `cd apps/tauri && bun run test && bun run build`, `cargo test -p imp_lab` and `cargo check -p imp_lab`. Extension contract changes: also verify `aura-editor` and the pack crates in `aura-engine` |
 | `.mnt/imp-ts` | see that repo’s `AGENTS.md` |
 | `.mnt/imp-graph-view` | `bun run test` from that repo (run in **imp-lab**; needs sibling `imp-ts`) |
 | `.mnt/imp-workbench` | see that repo’s `AGENTS.md` |
 | `.mnt/mir` | none — read-only mount |
 
-When a plan touches `aura-editor`, Imp Lab’s desktop app, or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-imp-lab-windows-build.sh`, `scripts/build-imp-lab-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run `run-imp-lab-windows-build.sh`, report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
+When a plan touches `aura-editor`, Imp Lab’s desktop app, the Aura pack (aura-editor `pack/`, aura-engine `lab-pack/` and pack crates, `scripts/assemble-aura-pack.sh`), or the Windows editor build path (`.devcontainer` `editor-windows` image, `scripts/run-imp-lab-windows-build.sh`, `scripts/build-imp-lab-windows.sh`, related env/task wiring), add frontmatter todo `windows-editor-build` after full-suite verification and before `commit-await-approval`: run `run-imp-lab-windows-build.sh`, report the output path (`AURA_EDITOR_WIN_OUT` / `.win-out`), and confirm success so the exported `.exe` matches the tree just built.
 
 ## Cross-repo Rust agent docs
 
-When changing agent docs (or linked style docs that agents are told to follow) with rules that are equally applicable to other **Rust** repos in this workspace (`aura-engine`, `aura-editor`, `imp-rs`, `imp-lab`), apply those changes across **all** of those repos in the same effort — via durable links (e.g. GitHub URLs) where practical, or mirrored wording where a reverse dependency would be wrong (e.g. Imp must not point at Aura for ownership). Do **not** hardcode co-located relative paths (`.mnt/…`, `../imp-*`, `../aura-*`); product repos should not assume sibling checkout layout. Prefer nearest-repo docs remaining the entry point; shared substance must still be reachable from each Rust repo’s `AGENTS.md` / `docs/rust-style.md`.
+When changing agent docs (or linked style docs that agents are told to follow) with rules that are equally applicable to other **Rust** repos in this workspace (`aura-engine`, `imp-rs`, `imp-lab`), apply those changes across **all** of those repos in the same effort — via durable links (e.g. GitHub URLs) where practical, or mirrored wording where a reverse dependency would be wrong (e.g. Imp must not point at Aura for ownership). Do **not** hardcode co-located relative paths (`.mnt/…`, `../imp-*`, `../aura-*`); product repos should not assume sibling checkout layout. Prefer nearest-repo docs remaining the entry point; shared substance must still be reachable from each Rust repo’s `AGENTS.md` / `docs/rust-style.md`.
 
-Rust repos in scope today: `aura-engine`, `aura-editor`, `imp-rs`, `imp-lab`. Not `imp-spec` (non-Rust) unless a change is language-neutral and separately warranted.
+Rust repos in scope today: `aura-engine`, `imp-rs`, `imp-lab`. Not `imp-spec` or `aura-editor` (non-Rust) unless a change is language-neutral and separately warranted.
 
 ## Live Compose stack — hang avoidance (hard rules)
 
@@ -82,14 +83,14 @@ session (with or without `timeout`):
 
 - `docker compose … up` / `down` / `stop` / `restart` / `kill`
 - any `--force-recreate`, `--renew-anon-volumes`, or recreate-by-`run` of
-  `engine`, `editor`, or `imp-lab`
+  `engine` or `imp-lab`
 - recreating containers “so a new mount appears”
 
 **Do instead:**
 
 | Need | Safe approach |
 |------|----------------|
-| Run editor / Imp Lab commands | `docker compose … exec -T <service> bash -lc '…'` (service already up) |
+| Run Imp Lab / aura-editor commands | `docker compose … exec -T <service> bash -lc '…'` (service already up) |
 | New/changed bind mounts or `.env` paths | Tell the user to **rebuild/reopen** the Dev Container; do not recreate services yourself |
 | Verify when `exec` is wrong/unavailable | One-off `docker run --rm` with **host** bind mounts (same pattern as `scripts/run-*-windows-build.sh`); never `compose up` |
 | Image Dockerfile / feature changes | `docker compose … build <service>` is OK; applying it still needs user rebuild/reopen for the attach target |
@@ -109,31 +110,33 @@ cargo clippy
 ./demos/render-all.sh
 ```
 
-## Commands (editor)
+## Commands (aura-editor)
 
-Run **in the editor service**, from `/workspaces/aura-workbench/.mnt/aura-editor`:
+Run **in the imp-lab service**, from `/workspaces/aura-workbench/.mnt/aura-editor`:
 
 ```bash
-cargo build
-cargo test
-cargo clippy
-cargo run
+bun install
+bun run test
+bun run build
 ```
 
 From the attached engine context:
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T imp-lab bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && bun run test'
 ```
 
-An oversized editor `target/` (stale debug fingerprints) is a **defect**, not expected. Default cap is **8 GiB**. Measure and clean when over:
+## Aura pack (local run)
+
+The Aura pack is aura-editor's `pack/extensions.json` and UI library plus aura-engine's pack cdylibs and `lab-pack/` data. Assemble it into `.aura-pack/` (git-ignored) in the **imp-lab** service (or the VS Code / Cursor task **Assemble Aura pack (Linux)**), then run Imp Lab with it:
 
 ```bash
-bash /workspaces/aura-workbench/scripts/clean-editor-target-if-large.sh
-# or VS Code / Cursor task: Clean editor target if large
+bash /workspaces/aura-workbench/scripts/assemble-aura-pack.sh
+cd /workspaces/aura-workbench/.mnt/imp-lab/apps/tauri
+IMP_LAB_EXTENSIONS=/workspaces/aura-workbench/.aura-pack/extensions.json bun run tauri dev
 ```
 
-Override the threshold with `AURA_EDITOR_TARGET_MAX_GIB`. Pass `--dry-run` to report without cleaning.
+`CARGO_TARGET_DIR` overrides where the engine cdylibs are built.
 
 ## Commands (imp-lab)
 
@@ -165,7 +168,7 @@ container mid-session. Use `exec -T` on the running service, or a one-off
 
 On-demand `editor-windows` image (not started with the Dev Container). Artifacts go to the host path in `AURA_EDITOR_WIN_OUT` (mounted at `/out`; see `.devcontainer/.env.example`):
 
-- **Imp Lab:** portable `imp-lab.exe` plus optional Aura Lab pack (`extensions.json`, `extensions/aura_imp_lab_catalogs.dll`, `extensions/aura_imp_lab_playback.dll`, `catalogs/`). Needs **WebView2** on the Windows host (normally present via Edge). The deprecated Iced `aura-editor` is no longer exported for Windows.
+- **Imp Lab + Aura pack:** portable `imp-lab.exe` plus the Aura pack (`extensions.json` from aura-editor, `extensions/aura_imp_lab_catalogs.dll`, `extensions/aura_imp_lab_playback.dll`, `extensions/aura_editor.js`, `catalogs/`, and `demo-project/` when not already present). Needs **WebView2** on the Windows host (normally present via Edge).
 
 The engine Dev Container includes **docker-outside-of-docker** so the Docker CLI can talk to the host daemon. After changing `devcontainer.json` features, rebuild/reopen the container.
 
@@ -179,8 +182,8 @@ That wrapper builds `editor-windows` and runs the cross-compile with host bind m
 
 ## Image rebuild
 
-Editor and editor-windows derive from `aura-workbench-engine:local`. Compose wires that with
-`additional_contexts`, so a single build is safe (and what Dev Containers runs for engine+editor):
+imp-lab and editor-windows derive from `aura-workbench-engine:local`. Compose wires that with
+`additional_contexts`, so a single build is safe (and what Dev Containers runs for engine+imp-lab):
 
 ```bash
 docker compose -f .devcontainer/docker-compose.yml build

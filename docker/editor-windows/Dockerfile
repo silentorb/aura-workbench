@@ -1,6 +1,6 @@
 # Derives from the workbench engine image (Rust + ALSA).
 # Compose declares this via build.additional_contexts so `docker compose build` can
-# build engine + this service safely (same pattern as the Linux editor image).
+# build engine + this service safely (same pattern as the imp-lab image).
 ARG BASE_IMAGE=aura-workbench-engine:local
 FROM ${BASE_IMAGE}
 

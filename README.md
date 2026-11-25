@@ -3,10 +3,9 @@
 Primary development workspace for Aura. Opens as a Dev Container that starts Compose services:
 
 - **engine** — Rust toolchain + ALSA; Cursor attaches here; home for the **engine test suite**
-- **editor** — derives from the engine image, adds Linux GUI deps for **Iced**; editor build/test/run only (not engine tests)
-- **imp-lab** — Imp Lab desktop host (Bun + WebKitGTK); Dockerfile owned by **imp-lab** (`docker/Dockerfile`)
+- **imp-lab** — Imp Lab desktop host (Bun + WebKitGTK); Dockerfile owned by **imp-lab** (`docker/Dockerfile`). Also builds and tests **aura-editor** (Aura's editor UI as Imp Lab extensions) and assembles the Aura pack
 
-An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`cargo-xwin` plus Bun): portable `imp-lab.exe` with the Aura Lab pack. It is not started with the Dev Container.
+An on-demand **editor-windows** service cross-compiles Windows MSVC binaries (`cargo-xwin` plus Bun): portable `imp-lab.exe` with the Aura pack. It is not started with the Dev Container.
 
 ## Host layout
 
@@ -54,17 +53,15 @@ cargo clippy
 ./demos/render-all.sh
 ```
 
-### Editor (editor service)
+### Imp Lab and aura-editor (imp-lab service)
 
 ```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T editor bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && cargo test'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T imp-lab bash -lc 'cd /workspaces/aura-workbench/.mnt/aura-editor && bun run test'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T imp-lab bash -lc 'bash /workspaces/aura-workbench/scripts/assemble-aura-pack.sh'
+docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T imp-lab bash -lc 'cd /workspaces/aura-workbench/.mnt/imp-lab/apps/tauri && IMP_LAB_EXTENSIONS=/workspaces/aura-workbench/.aura-pack/extensions.json bun run tauri dev'
 ```
 
-### Imp Lab (imp-lab service)
-
-```bash
-docker compose -f /workspaces/aura-workbench/.devcontainer/docker-compose.yml exec -T imp-lab bash -lc 'cd /workspaces/aura-workbench/.mnt/imp-lab/apps/tauri && bun run tauri dev'
-```
+The second command assembles the Aura pack (aura-editor configuration + UI library, aura-engine cdylibs and data) into `.aura-pack/`; the third runs Imp Lab with it.
 
 Do **not** `docker compose up --force-recreate` (or `down`/`restart`) the live
 Dev Container stack from inside the engine session — it hangs agents. New mounts
@@ -73,7 +70,7 @@ need a rebuild/reopen; one-off `docker run --rm` is fine for verify. See
 
 ### Rebuild images
 
-Editor, imp-lab, and editor-windows `FROM` `aura-workbench-engine:local`. Compose declares that build dependency,
+imp-lab and editor-windows `FROM` `aura-workbench-engine:local`. Compose declares that build dependency,
 so one command is enough for the images Dev Containers builds by default:
 
 ```bash
@@ -93,7 +90,7 @@ Set `AURA_EDITOR_WIN_OUT` in `.devcontainer/.env` to a host directory for output
 binaries from Windows Explorer.
 
 - **Imp Lab** (`run-imp-lab-windows-build.sh` / task **Build Imp Lab (Windows)**):
-  portable `imp-lab.exe` plus Aura Lab pack (`extensions.json`, catalog `.dll`, `catalogs/`).
+  portable `imp-lab.exe` plus the Aura pack (aura-editor's `extensions.json` and UI library, aura-engine's catalog / playback `.dll`s, `catalogs/`, `demo-project/`).
   The Windows host needs **WebView2** (normally present via Edge on Win10/11).
 
 Export I/O is time-bounded: if the configured mount is flaky or locked (common with some
@@ -115,16 +112,16 @@ See [`AGENTS.md`](./AGENTS.md). Planning and publishing skills come from silento
 ## Paths
 
 Compose reads host paths from `.devcontainer/.env`. Defaults point at sibling repos (`../../aura-engine`, etc.).
-`AURA_EDITOR_WIN_OUT` controls where Windows exports land (`imp-lab.exe` and the Lab pack).
+`AURA_EDITOR_WIN_OUT` controls where Windows exports land (`imp-lab.exe` and the Aura pack).
 
 ## Repos
 
 | Repo | Role |
 |------|------|
 | `aura-workbench` | Orchestration (Compose, Dev Container) |
-| `aura-engine` | Procedural music engine (Rust) |
-| `aura-editor` | Editor UI (Rust / Iced); audio/domain host |
-| `imp-lab` | Imp graph session + GUI building blocks; Imp Lab desktop app |
+| `aura-engine` | Procedural music engine (Rust); the Aura pack's extension libraries and data |
+| `aura-editor` | Aura's editor UI as Imp Lab extensions (TypeScript UI library) and the Aura pack configuration |
+| `imp-lab` | Imp Lab: domain-neutral desktop host for Imp graphs and Tome records, with the extension system |
 
 End users target Windows; daily development is WSL Linux containers. Use the on-demand **editor-windows** service to produce portable Windows binaries.
 

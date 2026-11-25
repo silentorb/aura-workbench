@@ -30,23 +30,6 @@ services:
     working_dir: /workspaces/aura-workbench/.mnt/aura-engine
     command: sleep infinity
 
-  editor:
-    image: aura-workbench-editor:local
-    build:
-      context: ..
-      dockerfile: docker/editor/Dockerfile
-      # Bake builds engine before editor (depends_on only orders startup, not builds).
-      # Required when Dev Containers runs `docker compose build engine editor` in parallel.
-      additional_contexts:
-        "aura-workbench-engine:local": "service:engine"
-      args:
-        BASE_IMAGE: aura-workbench-engine:local
-    volumes: *mnt-volumes
-    working_dir: /workspaces/aura-workbench/.mnt/aura-editor
-    command: sleep infinity
-    depends_on:
-      - engine
-
   # Imp Lab desktop host (Dockerfile owned by imp-lab; Bun + WebKitGTK).
   imp-lab:
     image: imp-lab:local
@@ -90,7 +73,7 @@ services:
       - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/tome-rust-server
       - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
       - ${AURA_EDITOR_WIN_OUT:-../.win-out}:/out
-    working_dir: /workspaces/aura-workbench/.mnt/aura-editor
+    working_dir: /workspaces/aura-workbench/.mnt/imp-lab
     command: sleep infinity
     depends_on:
       - engine

@@ -1,3 +1,4 @@
 .env
 .mnt/
 .win-out/
+.aura-pack/
