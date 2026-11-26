@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Bash(scripts/run:*)", "Bash(./scripts/run:*)", "Bash(scripts/compose ps:*)", "Bash(scripts/compose config:*)", "Bash(scripts/compose logs:*)", "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(docker ps:*)", "Bash(scripts/assemble-aura-pack.sh:*)", "Bash(scripts/run-imp-lab-windows-build.sh:*)"]
+  }
+}

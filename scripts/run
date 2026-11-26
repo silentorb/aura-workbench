@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Run a command in a Compose service of this workbench — the agent entrypoint.
+#   scripts/run [-C <dir>] <service> <cmd...>
+#   scripts/run -C ../some-repo <service> <cmd...>   # like git -C: host path, any form
+# Host: starts the service if needed (never recreates), then execs with the working
+# directory mapped from <dir> (default $PWD): ~/dev/<repo>/... -> /workspaces/<repo>/...
+# Inside a container: runs the command in place (cd <dir> first when given).
+set -euo pipefail
+# shellcheck source=lib/paths.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/paths.sh"
+
+dir="$PWD"
+if [[ "${1:-}" == "-C" ]]; then
+  dir="$(cd "$2" && pwd)"
+  shift 2
+fi
+if [[ $# -lt 2 ]]; then
+  echo "usage: $(basename "$0") [-C <dir>] <service> <cmd...>" >&2
+  exit 2
+fi
+service="$1"
+shift
+
+if [[ -f /.dockerenv ]]; then
+  cd "$dir"
+  exec "$@"
+fi
+
+compose=(docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE")
+"${compose[@]}" up -d --no-recreate "$service" >/dev/null 2>&1 \
+  || "${compose[@]}" up -d --no-recreate "$service"
+
+workdir=()
+case "$dir/" in
+  "$DEV_ROOT"/*) workdir=(-w "${CONTAINER_ROOT}/${dir#"$DEV_ROOT"/}") ;;
+esac
+
+exec "${compose[@]}" exec -T "${workdir[@]}" "$service" bash -lc "$(printf '%q ' "$@")"

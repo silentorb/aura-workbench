@@ -1,4 +1,7 @@
 .env
-.mnt/
 .win-out/
 .aura-pack/
+
+# Claude Code local state
+.claude/worktrees/
+.claude/settings.local.json

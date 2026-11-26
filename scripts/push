@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Push writable workspace sibling repos to their remotes in dependency order
-# (dependencies before dependents). Skips the read-only mir mount.
+# (dependencies before dependents). Skips mir (read-only reference).
 #
 # Usage (from workbench root, host or container):
 #   ./scripts/push
@@ -13,7 +13,7 @@ Usage: ./scripts/push
 Push current branches of writable workspace repos to origin, in dependency
 order: imp-spec → imp-rs → imp-lab → aura-engine → aura-editor → aura-workbench.
 
-Skips mir (mounted read-only in Compose).
+Skips mir (read-only reference).
 EOF
 }
 
@@ -34,21 +34,13 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKBENCH_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# shellcheck source=mnt-paths.sh
-source "${SCRIPT_DIR}/mnt-paths.sh"
+# shellcheck source=lib/paths.sh
+source "${SCRIPT_DIR}/lib/paths.sh"
 
-# Resolve a repo directory. Prefers .mnt/<name>, then a sibling of the workbench.
+# Resolve a sibling repo directory (../<name>).
 resolve_repo() {
-  local name="$1"
-  local candidates=("${MNT}/${name}" "${WORKBENCH_ROOT}/../${name}")
-  local candidate
-  for candidate in "${candidates[@]}"; do
-    if [[ -e "${candidate}/.git" ]]; then
-      (cd "$candidate" && pwd)
-      return 0
-    fi
-  done
-  return 1
+  local candidate="${DEV_ROOT}/$1"
+  [[ -e "${candidate}/.git" ]] && (cd "$candidate" && pwd)
 }
 
 push_repo() {

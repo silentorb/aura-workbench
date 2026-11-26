@@ -11,10 +11,10 @@ FALLBACK_OUT=/workspaces/aura-workbench/.win-out
 TARGET=x86_64-pc-windows-msvc
 EXE_NAME=imp-lab.exe
 CARGO_EXE_NAME=imp-lab.exe
-LAB_DIR=/workspaces/aura-workbench/.mnt/imp-lab
-ENGINE_DIR=/workspaces/aura-workbench/.mnt/aura-engine
+LAB_DIR=/workspaces/imp-lab
+ENGINE_DIR=/workspaces/aura-engine
 TAURI_APP="$LAB_DIR/apps/tauri"
-EDITOR_DIR=/workspaces/aura-workbench/.mnt/aura-editor
+EDITOR_DIR=/workspaces/aura-editor
 # Aura pack: configuration from aura-editor; extension libraries and data from aura-engine.
 PACK_CONFIG_SRC="$EDITOR_DIR/pack/extensions.json"
 LAB_PACK_SRC="$ENGINE_DIR/lab-pack"

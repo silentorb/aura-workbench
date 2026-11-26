@@ -1,36 +1,38 @@
-# Match Dev Containers' project name so host `docker compose` and the IDE share one stack.
+# Match Dev Containers' project name so host `scripts/compose` and the IDE share one stack.
 name: aura-workbench_devcontainer
 
-x-mnt-volumes: &mnt-volumes
-  - ..:/workspaces/aura-workbench
-  # Sibling repos under the workbench .mnt/ tree (same pattern as the old Aura workspace).
-  - ${AURA_ENGINE_PATH:-../../aura-engine}:/workspaces/aura-workbench/.mnt/aura-engine
-  - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-workbench/.mnt/aura-editor
-  - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
-  - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
-  - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/aura-workbench/.mnt/imp-lab
-  - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts
-  - ${IMP_GRAPH_VIEW_PATH:-../../imp-graph-view}:/workspaces/aura-workbench/.mnt/imp-graph-view
-  # Temporary: Imp workbench sibling (remove when no longer needed).
-  - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
-  - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
-  - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/tome-rust-server
-  # Cargo path deps in aura-engine resolve `.mnt/imp-*` relative to the engine root.
-  - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
-  - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/tome-rust-server
-  - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
+# Sibling repos: host ../<repo> (relative to this file: ../../<repo>) → /workspaces/<repo>.
+# Sibling-relative paths (aura-engine's ../imp-rs Cargo deps, aura-editor's ../imp-lab)
+# resolve the same inside and outside containers.
+# *_PATH overrides live in .devcontainer/.env (see .env.example).
+x-repo-volumes: &repo-volumes
+  - ${WORKBENCH_PATH:-..}:/workspaces/aura-workbench
+  - ${AURA_ENGINE_PATH:-../../aura-engine}:/workspaces/aura-engine
+  - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-editor
+  - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/imp-rs
+  - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/imp-spec
+  - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/imp-lab
+  - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/imp-ts
+  - ${IMP_GRAPH_VIEW_PATH:-../../imp-graph-view}:/workspaces/imp-graph-view
+  - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/tome-rust-server
+  - ${MIR_PATH:-../../mir}:/workspaces/mir:ro
+  # Skill links in .claude/skills and .agents/skills resolve here (IDE attach).
+  - ${SILENTORB_AGENTS_PATH:-../../silentorb-agents}:/workspaces/silentorb-agents:ro
 
 services:
+  # Engine build/test (Rust + ALSA). Also the optional Dev Container attach target.
   engine:
     image: aura-workbench-engine:local
     build:
       context: ..
       dockerfile: docker/engine/Dockerfile
-    volumes: *mnt-volumes
-    working_dir: /workspaces/aura-workbench/.mnt/aura-engine
+    volumes: *repo-volumes
+    user: vscode
+    working_dir: /workspaces/aura-engine
     command: sleep infinity
 
-  # Imp Lab desktop host (Dockerfile owned by imp-lab; Bun + WebKitGTK).
+  # Imp Lab desktop host (Dockerfile owned by imp-lab; Bun + WebKitGTK). Also builds/tests
+  # aura-editor and assembles the Aura pack.
   imp-lab:
     image: imp-lab:local
     build:
@@ -40,14 +42,17 @@ services:
         "aura-workbench-engine:local": "service:engine"
       args:
         BASE_IMAGE: aura-workbench-engine:local
-    volumes: *mnt-volumes
-    working_dir: /workspaces/aura-workbench/.mnt/imp-lab
+    volumes: *repo-volumes
+    user: vscode
+    working_dir: /workspaces/imp-lab
     command: sleep infinity
     depends_on:
       - engine
 
-  # On-demand Windows MSVC cross-compile (not in devcontainer runServices).
+  # On-demand Windows MSVC cross-compile (profile `windows`; use
+  # scripts/run-imp-lab-windows-build.sh). Same mounts as above plus /out.
   editor-windows:
+    profiles: ["windows"]
     image: aura-workbench-editor-windows:local
     build:
       context: ..
@@ -56,24 +61,20 @@ services:
         "aura-workbench-engine:local": "service:engine"
       args:
         BASE_IMAGE: aura-workbench-engine:local
-    # Keep in sync with x-mnt-volumes, plus the Windows output mount.
     volumes:
-      - ..:/workspaces/aura-workbench
-      - ${AURA_ENGINE_PATH:-../../aura-engine}:/workspaces/aura-workbench/.mnt/aura-engine
-      - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-workbench/.mnt/aura-editor
-      - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/imp-rs
-      - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/imp-spec
-      - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/aura-workbench/.mnt/imp-lab
-      - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/aura-workbench/.mnt/imp-ts
-      - ${IMP_GRAPH_VIEW_PATH:-../../imp-graph-view}:/workspaces/aura-workbench/.mnt/imp-graph-view
-      - ${IMP_WORKBENCH_PATH:-../../imp-workbench}:/workspaces/aura-workbench/.mnt/imp-workbench
-      - ${MIR_PATH:-../../mir}:/workspaces/aura-workbench/.mnt/mir:ro
-      - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/tome-rust-server
-      - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-rs
-      - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/tome-rust-server
-      - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/aura-workbench/.mnt/aura-engine/.mnt/imp-spec
+      - ${WORKBENCH_PATH:-..}:/workspaces/aura-workbench
+      - ${AURA_ENGINE_PATH:-../../aura-engine}:/workspaces/aura-engine
+      - ${AURA_EDITOR_PATH:-../../aura-editor}:/workspaces/aura-editor
+      - ${IMP_RS_PATH:-../../imp-rs}:/workspaces/imp-rs
+      - ${IMP_SPEC_PATH:-../../imp-spec}:/workspaces/imp-spec
+      - ${IMP_LAB_PATH:-../../imp-lab}:/workspaces/imp-lab
+      - ${IMP_TS_PATH:-../../imp-ts}:/workspaces/imp-ts
+      - ${IMP_GRAPH_VIEW_PATH:-../../imp-graph-view}:/workspaces/imp-graph-view
+      - ${TOME_RUST_SERVER_PATH:-../../tome-rust-server}:/workspaces/tome-rust-server
+      - ${MIR_PATH:-../../mir}:/workspaces/mir:ro
       - ${AURA_EDITOR_WIN_OUT:-../.win-out}:/out
-    working_dir: /workspaces/aura-workbench/.mnt/imp-lab
+    user: vscode
+    working_dir: /workspaces/imp-lab
     command: sleep infinity
     depends_on:
       - engine

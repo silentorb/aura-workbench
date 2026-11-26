@@ -6,16 +6,20 @@
 #   catalogs/                 <- aura-engine/lab-pack/catalogs
 #   demo-project/             <- aura-engine/lab-pack/demo-project (never overwritten)
 #
-# Run where Cargo and Bun are available (the imp-lab service, or a one-off container with
-# the workbench mounts). Then start Imp Lab with IMP_LAB_EXTENSIONS=<dest>/extensions.json.
+# Runs in the imp-lab service (Cargo + Bun); on the host it re-execs itself there.
+# Then start Imp Lab with IMP_LAB_EXTENSIONS=<dest>/extensions.json.
 #
-# Usage: assemble-aura-pack.sh [dest] (default: /workspaces/aura-workbench/.aura-pack)
+# Usage: scripts/assemble-aura-pack.sh [dest] (default: <workbench>/.aura-pack)
 set -euo pipefail
+# shellcheck source=lib/paths.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/paths.sh"
+if [[ ! -f /.dockerenv ]]; then
+  exec "$WORKBENCH_ROOT/scripts/run" imp-lab bash /workspaces/aura-workbench/scripts/assemble-aura-pack.sh "$@"
+fi
 
-WORKBENCH=/workspaces/aura-workbench
-ENGINE_DIR="$WORKBENCH/.mnt/aura-engine"
-EDITOR_DIR="$WORKBENCH/.mnt/aura-editor"
-DEST="${1:-$WORKBENCH/.aura-pack}"
+ENGINE_DIR="$AURA_ENGINE"
+EDITOR_DIR="$AURA_EDITOR"
+DEST="${1:-$WORKBENCH_ROOT/.aura-pack}"
 ENGINE_TARGET_DIR="${CARGO_TARGET_DIR:-$ENGINE_DIR/target}"
 PROFILE_DIR=debug
 

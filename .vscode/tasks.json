@@ -7,40 +7,20 @@
       "command": "bash \"${workspaceFolder}/scripts/run-imp-lab-windows-build.sh\"",
       "options": {
         "cwd": "${workspaceFolder}",
-        "env": {
-          "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
-        }
+        "env": { "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}" }
       },
       "group": "build",
       "problemMatcher": ["$rustc"],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "focus": false,
-        "echo": true,
-        "showReuseMessage": true,
-        "clear": false
-      },
-      "detail": "Cross-compile portable imp-lab.exe plus the Aura pack (aura-editor config + UI library, aura-engine dlls) via editor-windows (cargo-xwin + Bun) into AURA_EDITOR_WIN_OUT (/out). Needs WebView2 on Windows. Requires Dev Container rebuild for docker-outside-of-docker."
+      "detail": "Cross-compile portable imp-lab.exe plus the Aura pack via editor-windows into AURA_EDITOR_WIN_OUT. Works on the WSL host or attached in the Dev Container."
     },
     {
       "label": "Assemble Aura pack (Linux)",
       "type": "shell",
-      "command": "docker compose -f \"${workspaceFolder}/.devcontainer/docker-compose.yml\" exec -T imp-lab bash -lc 'bash /workspaces/aura-workbench/scripts/assemble-aura-pack.sh'",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
+      "command": "bash \"${workspaceFolder}/scripts/assemble-aura-pack.sh\"",
+      "options": { "cwd": "${workspaceFolder}" },
       "group": "build",
       "problemMatcher": ["$rustc"],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared",
-        "focus": false,
-        "echo": true,
-        "showReuseMessage": true,
-        "clear": false
-      },
-      "detail": "Build the aura-engine pack cdylibs and the aura-editor UI library in the imp-lab service and assemble the Aura pack into .aura-pack/ (run Imp Lab with IMP_LAB_EXTENSIONS=/workspaces/aura-workbench/.aura-pack/extensions.json)."
+      "detail": "Build the aura-engine pack cdylibs and the aura-editor UI library in the imp-lab service and assemble the Aura pack into .aura-pack/."
     }
   ]
 }

@@ -1,0 +1,17 @@
+{
+  "folders": [
+    { "name": "aura-workbench", "path": "." },
+    { "name": "aura-engine", "path": "../aura-engine" },
+    { "name": "aura-editor", "path": "../aura-editor" },
+    { "name": "imp-lab", "path": "../imp-lab" },
+    { "name": "imp-rs", "path": "../imp-rs" },
+    { "name": "imp-spec", "path": "../imp-spec" },
+    { "name": "imp-ts", "path": "../imp-ts" },
+    { "name": "imp-graph-view", "path": "../imp-graph-view" },
+    { "name": "tome-rust-server", "path": "../tome-rust-server" },
+    { "name": "mir", "path": "../mir" }
+  ],
+  "settings": {
+    "rust-analyzer.linkedProjects": ["../aura-engine/Cargo.toml"]
+  }
+}

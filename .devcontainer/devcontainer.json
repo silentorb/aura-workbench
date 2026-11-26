@@ -24,7 +24,7 @@
       "settings": {
         "rust-analyzer.check.command": "clippy",
         "rust-analyzer.linkedProjects": [
-          "/workspaces/aura-workbench/.mnt/aura-engine/Cargo.toml"
+          "/workspaces/aura-engine/Cargo.toml"
         ]
       }
     }

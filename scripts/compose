@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# docker compose against this workbench's stack (same project name as Dev Containers,
+# so host commands and an attached IDE share one stack).
+#   scripts/compose ps | logs <svc> | build [svc] | up -d <svc> | config
+#   scripts/compose rebuild <svc...>   build + recreate (reopen Cursor if attached to it)
+set -euo pipefail
+# shellcheck source=lib/paths.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/paths.sh"
+compose=(docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE")
+if [[ "${1:-}" == "rebuild" ]]; then
+  shift
+  "${compose[@]}" build "$@"
+  exec "${compose[@]}" up -d --force-recreate "$@"
+fi
+exec "${compose[@]}" "$@"
